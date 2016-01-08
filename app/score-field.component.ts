@@ -3,7 +3,7 @@ import {Component} from 'angular2/core';
   inputs: ['category'],
   selector: 'score-field',
   template: `
-  {{category}}
+  {{category.value}}
   `
 })
 export class ScoreFieldComponent {

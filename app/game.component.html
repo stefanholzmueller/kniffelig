@@ -5,13 +5,13 @@
 		<tr>
 			<td>Einser</td>
 			<td>Nur 1er zählen</td>
-			<td>{{ categories['Aces'] }}</td>
+			<td>{{ vm.categories[0].value }}</td>
 		</tr>
 		<tr>
 			<td>Zweier</td>
 			<td>Nur 2er zählen</td>
 			<td>
-				<score-field [category]="categories['Twos']"></score-field>
+				<score-field [category]="findCategory('Twos')"></score-field>
 			</td>
 		</tr>
 		<tr>
