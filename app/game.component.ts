@@ -1,9 +1,10 @@
 import {Component} from 'angular2/core';
 import {OnInit} from 'angular2/core';
-import {ScoreFieldComponent} from './score-field.component';
+import {ScoreFieldDirective} from './score-field.directive';
+import {ViewModel, Category} from './viewmodel';
 
 @Component({
-  directives: [ScoreFieldComponent],
+  directives: [ScoreFieldDirective],
   selector: 'game',
   templateUrl: 'app/game.component.html'
 })
@@ -25,18 +26,4 @@ export class GameComponent implements OnInit {
   findCategory(categoryName) {
     return this.vm.categories.find((elem) => elem.name === categoryName);
   }
-}
-
-interface ViewModel {
-  dice: Number[];
-  categories: Category[];
-  totalUpper: Number;
-  bonus: Number;
-  totalLower: Number;
-  total: Number;
-}
-
-interface Category {
-  name: String;
-  value: Number;
 }
