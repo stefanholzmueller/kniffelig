@@ -5,17 +5,20 @@
 		<tr>
 			<td>Einser</td>
 			<td>Nur 1er zählen</td>
-			<td>{{ vm.categories[0].value }}</td>
+			<td [scoreField]="findCategory('Aces')" [onClick]="score">
+			</td>
 		</tr>
 		<tr>
 			<td>Zweier</td>
 			<td>Nur 2er zählen</td>
-			<td [scoreField]="findCategory('Twos')">
+			<td [scoreField]="findCategory('Twos')" [onClick]="score">
 			</td>
 		</tr>
 		<tr>
 			<td>Dreier</td>
 			<td>Nur 3er zählen</td>
+			<td [scoreField]="findCategory('Threes')" [onClick]="score">
+			</td>
 		</tr>
 		<tr>
 			<td>Vierer</td>

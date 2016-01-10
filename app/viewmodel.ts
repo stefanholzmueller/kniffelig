@@ -1,5 +1,6 @@
 export interface ViewModel {
   dice: Number[];
+  rerolls: Number;
   categories: Category[];
   totalUpper: Number;
   bonus: Number;
@@ -9,5 +10,6 @@ export interface ViewModel {
 
 export interface Category {
   name: String;
-  value: Number;
+  score?: Number;
+  option?: Number;
 }

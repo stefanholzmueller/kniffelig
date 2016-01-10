@@ -6,14 +6,29 @@ import {ViewModel, Category} from './viewmodel';
 @Component({
   directives: [ScoreFieldDirective],
   selector: 'game',
-  templateUrl: 'app/game.component.html'
+  templateUrl: 'app/game.component.html',
+  styles: [`
+    .legal-option {
+      background-color: green;
+      cursor: pointer;
+    }
+    .discard-option {
+      background-color: red;
+      cursor: pointer;
+    }
+    .scored {
+      background-color: lightgrey;
+    }
+  `]
 })
 export class GameComponent implements OnInit {
   public vm: ViewModel = {
     dice: [1,2,3,4,5],
+    rerolls: 0,
     categories: [
-      { name: 'Aces', value: 123 },
-      { name: 'Twos', value: 456 }
+      { name: 'Aces', score: 1 },
+      { name: 'Twos', option: 2 },
+      { name: 'Threes', option: null }
     ],
     totalUpper: 0,
     bonus: 0,
@@ -21,9 +36,11 @@ export class GameComponent implements OnInit {
     total: 0
   };
   ngOnInit() {
-    // setInterval(()=>this.vm.categories[1].value++,1000);
   }
   findCategory(categoryName) {
     return this.vm.categories.find((elem) => elem.name === categoryName);
+  }
+  score(category) {
+    console.log("score: " + category);
   }
 }
