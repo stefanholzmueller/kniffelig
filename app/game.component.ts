@@ -1,25 +1,11 @@
-import {Component} from 'angular2/core';
-import {OnInit} from 'angular2/core';
-import {ScoreFieldDirective} from './score-field.directive';
+import {Component, OnInit} from 'angular2/core';
+import {ScoreFieldComponent} from './score-field.component';
 import {ViewModel, Category} from './viewmodel';
 
 @Component({
-  directives: [ScoreFieldDirective],
+  directives: [ScoreFieldComponent],
   selector: 'game',
   templateUrl: 'app/game.component.html',
-  styles: [`
-    .legal-option {
-      background-color: green;
-      cursor: pointer;
-    }
-    .discard-option {
-      background-color: red;
-      cursor: pointer;
-    }
-    .scored {
-      background-color: lightgrey;
-    }
-  `]
 })
 export class GameComponent implements OnInit {
   public vm: ViewModel = {
@@ -28,7 +14,8 @@ export class GameComponent implements OnInit {
     categories: [
       { name: 'Aces', score: 1 },
       { name: 'Twos', option: 2 },
-      { name: 'Threes', option: null }
+      { name: 'Threes', option: null },
+      { name: 'Fours', score: 4 },
     ],
     totalUpper: 0,
     bonus: 0,
@@ -40,7 +27,10 @@ export class GameComponent implements OnInit {
   findCategory(categoryName) {
     return this.vm.categories.find((elem) => elem.name === categoryName);
   }
-  score(category) {
-    console.log("score: " + category);
+  score(categoryName) {
+    var category = this.findCategory(categoryName);
+    if (category.score === undefined) {
+      category.score = category.option;
+    }
   }
 }

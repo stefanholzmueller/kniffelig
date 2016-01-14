@@ -5,24 +5,22 @@
 		<tr>
 			<td>Einser</td>
 			<td>Nur 1er zählen</td>
-			<td [scoreField]="findCategory('Aces')" [onClick]="score">
-			</td>
+			<scorefield [category]="findCategory('Ones')" (click)="score('Ones')"></scorefield>
 		</tr>
 		<tr>
 			<td>Zweier</td>
 			<td>Nur 2er zählen</td>
-			<td [scoreField]="findCategory('Twos')" [onClick]="score">
-			</td>
+			<scorefield [category]="findCategory('Twos')" (click)="score('Twos')"></scorefield>
 		</tr>
 		<tr>
 			<td>Dreier</td>
 			<td>Nur 3er zählen</td>
-			<td [scoreField]="findCategory('Threes')" [onClick]="score">
-			</td>
+			<scorefield [category]="findCategory('Threes')" (click)="score('Threes')"></scorefield>
 		</tr>
 		<tr>
 			<td>Vierer</td>
 			<td>Nur 4er zählen</td>
+			<scorefield [category]="findCategory('Fours')" (click)="score('Fours')"></scorefield>
 		</tr>
 		<tr>
 			<td>Fünfer</td>
