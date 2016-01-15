@@ -1,5 +1,4 @@
 import {Component, Input, ElementRef, Renderer, OnInit} from 'angular2/core';
-import {Category} from './viewmodel';
 
 @Component({
   selector: 'scorefield',
