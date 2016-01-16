@@ -1,12 +1,16 @@
 module Yahtzee where
 
 import Prelude
+import Data.Array
+import Data.Maybe
+import Data.Foldable
 
-type ViewModel = {
-  dice :: Array Int
-}
+data Category = Aces
+              | Twos
 
-score :: ViewModel -> ViewModel
-score vm = vm { dice = [4,4,5,5,6] }
-  where
-    dice = vm.dice
+score :: Category -> Array Int -> Maybe Int
+score Aces = scorePips 1
+score Twos = scorePips 2
+
+scorePips :: Int -> Array Int -> Maybe Int
+scorePips n dice = Just (sum (filter (==n) dice))
