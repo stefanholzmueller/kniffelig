@@ -10,10 +10,12 @@ export class GameComponent implements OnInit {
   public dice = [1,2,3,4,5];
   public rerolls = 0;
   public categories = [
-      { name: 'Aces', score: 1 },
-      { name: 'Twos', option: 2 },
-      { name: 'Threes', option: null },
-      { name: 'Fours', score: 4 },
+      { name: 'Aces' },
+      { name: 'Twos' },
+      { name: 'Threes' },
+      { name: 'Fours' },
+      { name: 'Fives' },
+      { name: 'Sixes' },
     ];
   public totalUpper = 0;
   public bonus = 0;
@@ -21,6 +23,7 @@ export class GameComponent implements OnInit {
   public total = 0;
 
   ngOnInit() {
+    this.recalculateScores();
   }
   findCategory(categoryName) {
     return this.categories.find((elem) => elem.name === categoryName);
@@ -34,6 +37,8 @@ export class GameComponent implements OnInit {
   }
   recalculateScores() {
     this.categories.forEach((category) => {
+      var maybe = PS.Yahtzee.scoreStr(category.name)(this.dice)();
+      category.option = maybe.value0 ? maybe.value0 : null;
       console.log(category);
     });
   }

@@ -25,10 +25,12 @@
 		<tr>
 			<td>Fünfer</td>
 			<td>Nur 5er zählen</td>
+			<scorefield [category]="findCategory('Fives')" (click)="score('Fives')"></scorefield>
 		</tr>
 		<tr>
 			<td>Sechser</td>
 			<td>Nur 6er zählen</td>
+			<scorefield [category]="findCategory('Sixes')" (click)="score('Sixes')"></scorefield>
 		</tr>
 		<tr>
 			<td><strong>Zwischensumme</strong></td>
