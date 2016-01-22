@@ -13,6 +13,8 @@ data Category = Aces
 	      | Fours
 	      | Fives
 	      | Sixes
+	      | ThreeOfAKind
+	      | FourOfAKind
 
 parse :: forall eff. String -> Eff (err :: EXCEPTION | eff) Category
 parse "Aces" = pure Aces
@@ -21,6 +23,8 @@ parse "Threes" = pure Threes
 parse "Fours" = pure Fours
 parse "Fives" = pure Fives
 parse "Sixes" = pure Sixes
+parse "ThreeOfAKind" = pure ThreeOfAKind
+parse "FourOfAKind" = pure FourOfAKind
 parse _ = throw "aaaaaaaa"
 
 scoreStr :: forall eff. String -> Array Int -> Eff (err :: EXCEPTION | eff) (Maybe Int)
@@ -36,6 +40,13 @@ score Threes = scorePips 3
 score Fours = scorePips 4
 score Fives = scorePips 5
 score Sixes = scorePips 6
+score ThreeOfAKind = scoreKinds 3
+score FourOfAKind = scoreKinds 4
+
 
 scorePips :: Int -> Array Int -> Maybe Int
 scorePips n dice = Just (sum (filter (==n) dice))
+
+scoreKinds :: Int -> Array Int -> Maybe Int
+scoreKinds n dice = if (isOfAKind dice) then Just (sum dice) else Nothing
+  where isOfAKind = sort >>> groupBy (==) >>> map length >>> any (>=n)

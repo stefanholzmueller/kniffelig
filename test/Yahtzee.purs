@@ -18,3 +18,6 @@ tests = do
   let caught = catchException errorHandler effScore
   let pureScore = runPure caught
   assertEqual (pureScore) (Just 4)
+
+  assertEqual (score ThreeOfAKind [4,2,6,2,1]) Nothing
+  assertEqual (score ThreeOfAKind [2,2,6,2,1]) (Just 13)
