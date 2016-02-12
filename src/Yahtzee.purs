@@ -1,11 +1,11 @@
 module Yahtzee where
 
 import Prelude
-import Data.Array
-import Data.Maybe
-import Data.Foldable
 import Control.Monad.Eff
 import Control.Monad.Eff.Exception
+import Data.Array
+import Data.Foldable
+import Data.Maybe
 
 data Category = Aces
               | Twos
