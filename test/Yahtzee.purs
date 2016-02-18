@@ -7,6 +7,8 @@ import Test.Assert.Simple
 import Yahtzee
 import Data.Maybe
 
+main = tests
+
 tests :: forall e. Eff (err :: EXCEPTION | e) Unit
 tests = do
   assertEqual (score Aces [1,2,3,4,5]) (Just 1)
@@ -21,3 +23,6 @@ tests = do
 
   assertEqual (score ThreeOfAKind [4,2,6,2,1]) Nothing
   assertEqual (score ThreeOfAKind [2,2,6,2,1]) (Just 13)
+
+  assertEqual (score FullHouse [2,2,6,2,1]) Nothing
+  assertEqual (score FullHouse [2,2,6,2,6]) (Just 25)
