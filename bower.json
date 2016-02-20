@@ -16,6 +16,6 @@
     "purescript-lists": "~0.7.7",
     "purescript-arrays": "~0.4.4",
     "purescript-strings": "~0.7.1",
-    "purescript-quickcheck": "~0.12.2"
+    "purescript-strongcheck": "~0.14.7"
   }
 }

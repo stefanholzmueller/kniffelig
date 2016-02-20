@@ -55,5 +55,7 @@ scoreKinds n dice = if (isOfAKind dice) then Just (sum dice) else Nothing
   where isOfAKind = sort >>> groupBy (==) >>> map length >>> any (>=n)
 
 scoreFullHouse :: Array Int -> Maybe Int
-scoreFullHouse dice = if (isFullHouse dice == [2,3]) then Just 25 else Nothing
-  where isFullHouse = sort >>> groupBy (==) >>> map length >>> sort
+scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
+  where isFullHouse dice = (groupDice dice) == [2,3]
+        groupDice        = sort >>> groupBy (==) >>> map length >>> sort
+
