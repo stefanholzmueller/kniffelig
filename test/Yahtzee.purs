@@ -9,7 +9,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Test.Assert.Simple (assertEqual)
 import Test.StrongCheck (class Arbitrary, QC, Result, (<?>), smallCheck)
 import Test.StrongCheck.Gen (nChooseK, shuffleArray)
-import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse), score, scoreStr)
+import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight), score, scoreStr)
 
 
 tests :: QC Unit
@@ -30,6 +30,11 @@ tests = do
   assertEqual (score FullHouse [2,2,6,2,1]) Nothing
   assertEqual (score FullHouse [2,2,6,2,6]) (Just 25)
   smallCheck (propFullHouse :: Dice -> Result)
+
+  assertEqual (score SmallStraight [4,1,4,3,2]) (Just 30)
+  assertEqual (score SmallStraight [4,1,5,3,2]) (Just 30)
+  assertEqual (score SmallStraight [5,1,5,3,2]) Nothing
+
 
 data Dice = Dice (Array Int)
 

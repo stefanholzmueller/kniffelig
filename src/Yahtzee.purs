@@ -3,7 +3,8 @@ module Yahtzee where
 import Prelude
 import Control.Monad.Eff
 import Control.Monad.Eff.Exception
-import Data.Array
+import Data.Array hiding (tail)
+import Data.Array.Unsafe (tail)
 import Data.Foldable
 import Data.Maybe
 
@@ -16,6 +17,7 @@ data Category = Aces
 	      | ThreeOfAKind
 	      | FourOfAKind
               | FullHouse
+              | SmallStraight
 
 parse :: forall eff. String -> Eff (err :: EXCEPTION | eff) Category
 parse "Aces" = pure Aces
@@ -27,6 +29,7 @@ parse "Sixes" = pure Sixes
 parse "ThreeOfAKind" = pure ThreeOfAKind
 parse "FourOfAKind" = pure FourOfAKind
 parse "FullHouse" = pure FullHouse
+parse "SmallStraight" = pure SmallStraight
 parse _ = throw "aaaaaaaa"
 
 scoreStr :: forall eff. String -> Array Int -> Eff (err :: EXCEPTION | eff) (Maybe Int)
@@ -45,6 +48,7 @@ score Sixes = scorePips 6
 score ThreeOfAKind = scoreKinds 3
 score FourOfAKind = scoreKinds 4
 score FullHouse = scoreFullHouse
+score SmallStraight = scoreStraight 4
 
 
 scorePips :: Int -> Array Int -> Maybe Int
@@ -59,3 +63,13 @@ scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
   where isFullHouse dice = (groupDice dice) == [2,3]
         groupDice        = sort >>> groupBy (==) >>> map length >>> sort
 
+scoreStraight :: Int -> Array Int -> Maybe Int
+scoreStraight n dice = if isStraight then points n else Nothing
+  where isStraight = countStraight >= (n - 1)
+	countStraight = foldl step 0 diffs
+        step acc x = if x == 1 then acc + 1 else 0
+        diffs = zipWith (-) (tail straightDice) straightDice
+        straightDice = sort (nub dice)
+        points 4 = Just 30
+	points 5 = Just 40
+        points _ = Nothing
