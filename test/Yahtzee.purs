@@ -1,8 +1,10 @@
 module Test.Yahtzee where
 
-import Prelude (Unit, bind, pure, return, show, (++), (==))
+import Prelude (class Show, Unit, bind, pure, return, show, (++), (==), (<<<))
 import Control.Monad.Eff (runPure)
+import Control.Monad.Eff.Console (print)
 import Control.Monad.Eff.Exception (catchException)
+import Control.Monad.Eff.Unsafe (unsafePerformEff)
 import Data.Array ((..))
 import Data.Array.Unsafe (head, tail)
 import Data.Maybe (Maybe(Just, Nothing))
@@ -52,3 +54,10 @@ propFullHouse (Dice dice) = let score = scoreFn dice
 			    in score == Just 25 <?> show dice ++ " made the test fail with output: " ++ show score
   where handler error = pure Nothing
 	scoreFn dice  = runPure (catchException handler (scoreStr "FullHouse" dice))
+
+dbg :: forall a. (Show a) => a -> a
+dbg = unsafePerformEff <<< printAndReturn
+  where printAndReturn x = do print x
+                              return x
+
+
