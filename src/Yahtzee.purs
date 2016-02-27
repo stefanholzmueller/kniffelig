@@ -18,6 +18,7 @@ data Category = Aces
 	      | FourOfAKind
               | FullHouse
               | SmallStraight
+	      | LargeStraight
 
 parse :: forall eff. String -> Eff (err :: EXCEPTION | eff) Category
 parse "Aces" = pure Aces
@@ -30,6 +31,7 @@ parse "ThreeOfAKind" = pure ThreeOfAKind
 parse "FourOfAKind" = pure FourOfAKind
 parse "FullHouse" = pure FullHouse
 parse "SmallStraight" = pure SmallStraight
+parse "LargeStraight" = pure LargeStraight
 parse _ = throw "aaaaaaaa"
 
 scoreStr :: forall eff. String -> Array Int -> Eff (err :: EXCEPTION | eff) (Maybe Int)
@@ -49,6 +51,7 @@ score ThreeOfAKind = scoreKinds 3
 score FourOfAKind = scoreKinds 4
 score FullHouse = scoreFullHouse
 score SmallStraight = scoreStraight 4
+score LargeStraight = scoreStraight 5
 
 
 scorePips :: Int -> Array Int -> Maybe Int

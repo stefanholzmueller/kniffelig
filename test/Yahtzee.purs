@@ -1,17 +1,17 @@
 module Test.Yahtzee where
 
-import Prelude (class Show, Unit, bind, pure, return, show, (++), (==), (<<<))
+import Prelude (class Show, Unit, bind, pure, return, show, (++), (==), (<<<), (||))
 import Control.Monad.Eff (runPure)
 import Control.Monad.Eff.Console (print)
 import Control.Monad.Eff.Exception (catchException)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
-import Data.Array ((..))
+import Data.Array ((..), sort)
 import Data.Array.Unsafe (head, tail)
 import Data.Maybe (Maybe(Just, Nothing))
 import Test.Assert.Simple (assertEqual)
-import Test.StrongCheck (class Arbitrary, QC, Result, (<?>), smallCheck)
-import Test.StrongCheck.Gen (nChooseK, shuffleArray)
-import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight), score, scoreStr)
+import Test.StrongCheck (class Arbitrary, QC, Result, (<?>), (===), smallCheck, quickCheck)
+import Test.StrongCheck.Gen (chooseInt, nChooseK, shuffleArray, vectorOf)
+import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight), score, scoreStr)
 
 
 tests :: QC Unit
@@ -31,29 +31,43 @@ tests = do
 
   assertEqual (score FullHouse [2,2,6,2,1]) Nothing
   assertEqual (score FullHouse [2,2,6,2,6]) (Just 25)
-  smallCheck (propFullHouse :: Dice -> Result)
+  smallCheck (propFullHouse :: FullHouseDice -> Result)
 
   assertEqual (score SmallStraight [4,1,4,3,2]) (Just 30)
   assertEqual (score SmallStraight [4,1,5,3,2]) (Just 30)
   assertEqual (score SmallStraight [5,1,5,3,2]) Nothing
+--  quickCheck propSmallStraight
+  
+  assertEqual (score LargeStraight [3,2,5,1,4]) (Just 40)
+  assertEqual (score LargeStraight [1,2,3,4,6]) Nothing
+  quickCheck propLargeStraight
 
 
-data Dice = Dice (Array Int)
+data RandomDice = RandomDice (Array Int)
+instance arbitraryRandomDice :: Arbitrary RandomDice where
+  arbitrary = do dice <- vectorOf 5 (chooseInt 1.0 6.0)
+		 return (RandomDice dice)
 
-instance arbitraryDice :: Arbitrary Dice where
+data FullHouseDice = FullHouseDice (Array Int)
+instance arbitraryFullHouseDice :: Arbitrary FullHouseDice where
   arbitrary = do pair <- nChooseK 2 (1..6)
 		 let p = pair :: Array Int
                  let d1 = head p
                  let d2 = head (tail p)
                  let dice = [d1, d1, d2, d2, d2]
                  shuffled <- shuffleArray dice
-                 return (Dice shuffled)
+                 return (FullHouseDice shuffled)
 
-propFullHouse :: Dice -> Result
-propFullHouse (Dice dice) = let score = scoreFn dice
+propFullHouse :: FullHouseDice -> Result
+propFullHouse (FullHouseDice dice) = let score = scoreFn dice
 			    in score == Just 25 <?> show dice ++ " made the test fail with output: " ++ show score
   where handler error = pure Nothing
 	scoreFn dice  = runPure (catchException handler (scoreStr "FullHouse" dice))
+
+propLargeStraight :: RandomDice -> Result
+propLargeStraight (RandomDice dice) = actual == expected <?> show dice
+  where actual = score LargeStraight dice
+        expected = if (sort dice) == [1,2,3,4,5] || (sort dice) == [2,3,4,5,6] then Just 40 else Nothing
 
 dbg :: forall a. (Show a) => a -> a
 dbg = unsafePerformEff <<< printAndReturn
