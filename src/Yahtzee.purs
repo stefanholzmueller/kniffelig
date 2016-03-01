@@ -59,18 +59,16 @@ scorePips n dice = Just (sum (filter (==n) dice))
 
 scoreKinds :: Int -> Array Int -> Maybe Int
 scoreKinds n dice = if (isOfAKind dice) then Just (sum dice) else Nothing
-  where isOfAKind = sort >>> groupBy (==) >>> map length >>> any (>=n)
+  where isOfAKind = group' >>> map length >>> any (>=n)
 
 scoreFullHouse :: Array Int -> Maybe Int
 scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
   where isFullHouse dice = (groupDice dice) == [2,3]
-        groupDice        = sort >>> groupBy (==) >>> map length >>> sort
+        groupDice        = group' >>> map length >>> sort
 
 scoreStraight :: Int -> Array Int -> Maybe Int
 scoreStraight n dice = if isStraight then points n else Nothing
-  where isStraight = countStraight >= (n - 1)
-	countStraight = foldl step 0 diffs
-        step acc x = if x == 1 then acc + 1 else 0
+  where isStraight = any (\xs -> any (==1) xs && length xs >= n-1) (group diffs)
         diffs = zipWith (-) (tail straightDice) straightDice
         straightDice = sort (nub dice)
         points 4 = Just 30
