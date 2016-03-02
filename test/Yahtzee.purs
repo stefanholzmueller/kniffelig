@@ -11,7 +11,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Test.Assert.Simple (assertEqual)
 import Test.StrongCheck (class Arbitrary, QC, Result, (<?>), smallCheck, quickCheck)
 import Test.StrongCheck.Gen (chooseInt, nChooseK, shuffleArray, vectorOf)
-import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight), score, scoreStr)
+import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight, Chance), score, scoreStr)
 
 
 tests :: QC Unit
@@ -41,6 +41,9 @@ tests = do
   assertEqual (score LargeStraight [3,2,5,1,4]) (Just 40)
   assertEqual (score LargeStraight [1,2,3,4,6]) Nothing
   quickCheck propLargeStraight
+
+  assertEqual (score Chance [1,1,3,4,6]) (Just 15)
+  assertEqual (score Chance [1,1,1,1,1]) (Just 5)
 
 
 data RandomDice = RandomDice (Array Int)

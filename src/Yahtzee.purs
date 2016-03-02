@@ -19,6 +19,7 @@ data Category = Aces
               | FullHouse
               | SmallStraight
 	      | LargeStraight
+              | Chance
 
 parse :: forall eff. String -> Eff (err :: EXCEPTION | eff) Category
 parse "Aces" = pure Aces
@@ -52,6 +53,7 @@ score FourOfAKind = scoreKinds 4
 score FullHouse = scoreFullHouse
 score SmallStraight = scoreStraight 4
 score LargeStraight = scoreStraight 5
+score Chance = (Just <<< sum)
 
 
 scorePips :: Int -> Array Int -> Maybe Int
