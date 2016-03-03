@@ -7,11 +7,12 @@ import Control.Monad.Eff.Exception (catchException)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
 import Data.Array ((..), sort, nub, intersect)
 import Data.Array.Unsafe (head, tail)
+import Data.Foldable (any)
 import Data.Maybe (Maybe(Just, Nothing))
 import Test.Assert.Simple (assertEqual)
 import Test.StrongCheck (class Arbitrary, QC, Result, (<?>), smallCheck, quickCheck)
 import Test.StrongCheck.Gen (chooseInt, nChooseK, shuffleArray, vectorOf)
-import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight, Chance), score, scoreStr)
+import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance), score, scoreStr)
 
 
 tests :: QC Unit
@@ -41,6 +42,9 @@ tests = do
   assertEqual (score LargeStraight [3,2,5,1,4]) (Just 40)
   assertEqual (score LargeStraight [1,2,3,4,6]) Nothing
   quickCheck propLargeStraight
+
+  assertEqual (score Yahtzee [1,1,1,1,1]) (Just 50)
+  quickCheck propYahtzee
 
   assertEqual (score Chance [1,1,3,4,6]) (Just 15)
   assertEqual (score Chance [1,1,1,1,1]) (Just 5)
@@ -78,6 +82,11 @@ propLargeStraight :: RandomDice -> Result
 propLargeStraight (RandomDice dice) = actual == expected <?> show dice
   where actual = score LargeStraight dice
         expected = if (sort dice) == [1,2,3,4,5] || (sort dice) == [2,3,4,5,6] then Just 40 else Nothing
+
+propYahtzee :: RandomDice -> Result
+propYahtzee (RandomDice dice) = actual == expected <?> show dice
+  where actual = score Yahtzee dice
+	expected = if any (==dice) [[1,1,1,1,1], [2,2,2,2,2], [3,3,3,3,3], [4,4,4,4,4], [5,5,5,5,5], [6,6,6,6,6]] then Just 50 else Nothing
 
 dbg :: forall a. (Show a) => a -> a
 dbg = unsafePerformEff <<< printAndReturn

@@ -19,6 +19,7 @@ data Category = Aces
               | FullHouse
               | SmallStraight
 	      | LargeStraight
+              | Yahtzee
               | Chance
 
 parse :: forall eff. String -> Eff (err :: EXCEPTION | eff) Category
@@ -33,6 +34,7 @@ parse "FourOfAKind" = pure FourOfAKind
 parse "FullHouse" = pure FullHouse
 parse "SmallStraight" = pure SmallStraight
 parse "LargeStraight" = pure LargeStraight
+parse "Yahtzee" = pure Yahtzee
 parse _ = throw "aaaaaaaa"
 
 scoreStr :: forall eff. String -> Array Int -> Eff (err :: EXCEPTION | eff) (Maybe Int)
@@ -53,6 +55,7 @@ score FourOfAKind = scoreKinds 4
 score FullHouse = scoreFullHouse
 score SmallStraight = scoreStraight 4
 score LargeStraight = scoreStraight 5
+score Yahtzee = scoreYahtzee
 score Chance = (Just <<< sum)
 
 
@@ -76,3 +79,7 @@ scoreStraight n dice = if isStraight then points n else Nothing
         points 4 = Just 30
 	points 5 = Just 40
         points _ = Nothing
+
+scoreYahtzee :: Array Int -> Maybe Int
+scoreYahtzee dice = if isYahtzee then Just 50 else Nothing
+  where isYahtzee = length (group dice) == 1
