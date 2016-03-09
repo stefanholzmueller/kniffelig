@@ -73,9 +73,8 @@ scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
 
 scoreStraight :: Int -> Array Int -> Maybe Int
 scoreStraight n dice = if isStraight then points n else Nothing
-  where isStraight = any (\xs -> any (==1) xs && length xs >= n-1) (group diffs)
-        diffs = zipWith (-) (tail straightDice) straightDice
-        straightDice = sort (nub dice)
+  where isStraight = any (\die -> all (`elem` dice) (straightStartingFrom die)) dice
+	straightStartingFrom die = (die..(die+n-1))
         points 4 = Just 30
 	points 5 = Just 40
         points _ = Nothing
