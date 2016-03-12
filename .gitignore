@@ -4,3 +4,4 @@
 /output/
 /.psci*
 /dist/app.js
+.*.swp

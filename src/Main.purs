@@ -14,6 +14,7 @@ import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Events.Indexed as E
 
+
 data Query a = ToggleState a
 
 type State = { on :: Array Int }
