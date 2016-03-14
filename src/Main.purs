@@ -11,7 +11,7 @@ import Data.Maybe
 import Halogen
 import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
---import qualified Halogen.HTML.Events.Indexed as E
+import qualified Halogen.HTML.Events.Indexed as E
 
 import Yahtzee
 
@@ -36,7 +36,7 @@ ui = component render eval
 
   renderScoreField scoreField = H.tr_ [
                                   H.td_ [ H.text "Aces" ],
-                                  H.td_ [ H.text "0" ]
+				  H.td [ E.onClick (E.input_ ToggleState) ] [ H.text "0" ]
                                 ]
 
   eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
