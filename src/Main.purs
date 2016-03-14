@@ -6,21 +6,23 @@ import Control.Monad.Aff (Aff(), runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.Eff.Random
-import Data.Array
-import Data.Traversable
+import Data.Maybe
 
 import Halogen
 import Halogen.Util (appendToBody, onLoad)
 import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
+--import qualified Halogen.HTML.Events.Indexed as E
+
+import Yahtzee
 
 
 data Query a = ToggleState a
 
-type State = { on :: Array Int }
+type ScoreField = { category :: Category, score :: Maybe Int }
+type State = { scores :: Array ScoreField }
 
 initialState :: State
-initialState = { on: [0,0,0] }
+initialState = { scores: [ { category: Aces, score: Nothing } ] }
 
 ui :: forall eff. Component State Query (Aff (random::RANDOM | eff))
 ui = component render eval
@@ -28,18 +30,19 @@ ui = component render eval
 
   render :: State -> ComponentHTML Query
   render state =
-    H.div_ (map (\i -> button i state) [0,1,2])
+    H.table_ [
+      H.tbody_ (map renderScoreField state.scores)
+    ]
 
-  button i state = H.button
-          [ E.onClick (E.input_ ToggleState) ]
-          [ H.text (show (state.on !! i))
-          ]
-      
+  renderScoreField scoreField = H.tr_ [
+                                  H.td_ [ H.text "Aces" ],
+                                  H.td_ [ H.text "0" ]
+                                ]
 
   eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
   eval (ToggleState next) = do
-    die <- liftEff' (sequence [randomInt 1 6, randomInt 1 6, randomInt 1 6])
-    modify (\state -> { on: die })
+--    die <- liftEff' (sequence [randomInt 1 6, randomInt 1 6, randomInt 1 6])
+    modify (\state -> { scores: [] })
     pure next
 
 main :: forall eff. Eff (HalogenEffects (random::RANDOM | eff)) Unit
