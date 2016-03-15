@@ -16,7 +16,7 @@ import qualified Halogen.HTML.Events.Indexed as E
 import Yahtzee
 
 
-data Query a = ToggleState a
+data Query a = ScoreQuery a
 
 type ScoreField = { category :: Category, score :: Maybe Int }
 type State = { scores :: Array ScoreField }
@@ -35,14 +35,17 @@ ui = component render eval
     ]
 
   renderScoreField scoreField = H.tr_ [
-                                  H.td_ [ H.text "Aces" ],
-				  H.td [ E.onClick (E.input_ ToggleState) ] [ H.text "0" ]
+                                  H.td_ [ H.text (showCategory scoreField.category) ],
+				  H.td [ E.onClick (E.input_ ScoreQuery) ] [ H.text (show scoreField.score) ]
                                 ]
+  
+  showCategory Aces = "Einser"
+  showCategory _ = "not yet translated"
 
   eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
-  eval (ToggleState next) = do
+  eval (ScoreQuery next) = do
 --    die <- liftEff' (sequence [randomInt 1 6, randomInt 1 6, randomInt 1 6])
-    modify (\state -> { scores: [] })
+    modify (\state -> { scores: [ { category: Aces, score: Just 1 } ] })
     pure next
 
 main :: forall eff. Eff (HalogenEffects (random::RANDOM | eff)) Unit
