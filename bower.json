@@ -16,6 +16,7 @@
     "purescript-strings": "~0.7.1",
     "purescript-halogen": "^0.5.14",
     "purescript-random": "~0.2.3",
-    "purescript-strongcheck": "~0.14.7"
+    "purescript-strongcheck": "~0.14.7",
+    "purescript-generics": "^0.7.2"
   }
 }

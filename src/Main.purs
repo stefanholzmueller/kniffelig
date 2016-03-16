@@ -16,13 +16,17 @@ import qualified Halogen.HTML.Events.Indexed as E
 import Yahtzee
 
 
-data Query a = ScoreQuery a
+data Query a = ScoreQuery Category a
 
 type ScoreField = { category :: Category, score :: Maybe Int }
 type State = { scores :: Array ScoreField }
 
 initialState :: State
-initialState = { scores: [ { category: Aces, score: Nothing } ] }
+initialState = { scores: [ 
+                           { category: Aces, score: Nothing },
+                           { category: Twos, score: Just 4 }
+                         ]
+               }
 
 ui :: forall eff. Component State Query (Aff (random::RANDOM | eff))
 ui = component render eval
@@ -34,19 +38,22 @@ ui = component render eval
       H.tbody_ (map renderScoreField state.scores)
     ]
 
-  renderScoreField scoreField = H.tr_ [
-                                  H.td_ [ H.text (showCategory scoreField.category) ],
-				  H.td [ E.onClick (E.input_ ScoreQuery) ] [ H.text (show scoreField.score) ]
-                                ]
-  
-  showCategory Aces = "Einser"
-  showCategory _ = "not yet translated"
+  renderScoreField sf = H.tr_ [
+                          H.td_ [ H.text (showCategory sf.category) ],
+                          H.td props [ H.text label ]
+                        ]
+    where props = if isJust sf.score then [ E.onClick (E.input_ (ScoreQuery sf.category)) ] else [] 
+          label = show sf.score
+          showCategory Aces = "Einser"
+          showCategory Twos = "Zweier"
+          showCategory _ = "not yet translated"
 
   eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
-  eval (ScoreQuery next) = do
+  eval (ScoreQuery category next) = do
 --    die <- liftEff' (sequence [randomInt 1 6, randomInt 1 6, randomInt 1 6])
-    modify (\state -> { scores: [ { category: Aces, score: Just 1 } ] })
+    modify (\state -> { scores: map setScore state.scores })
     pure next
+      where setScore sf = if sf.category == category then { category: category, score: Just 123 } else sf
 
 main :: forall eff. Eff (HalogenEffects (random::RANDOM | eff)) Unit
 main = runAff throwException (const (pure unit)) $ do

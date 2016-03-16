@@ -3,22 +3,28 @@ module Yahtzee where
 import Prelude
 import Data.Array
 import Data.Foldable
+import Data.Generic
 import Data.Maybe
 
 
 data Category = Aces
               | Twos
-	      | Threes
-	      | Fours
-	      | Fives
-	      | Sixes
-	      | ThreeOfAKind
-	      | FourOfAKind
+              | Threes
+              | Fours
+              | Fives
+              | Sixes
+              | ThreeOfAKind
+              | FourOfAKind
               | FullHouse
               | SmallStraight
-	      | LargeStraight
+              | LargeStraight
               | Yahtzee
               | Chance
+
+derive instance genericCategory :: Generic Category
+instance eqCategory :: Eq Category where
+  eq = gEq
+
 
 score :: Category -> Array Int -> Maybe Int
 score Aces = scorePips 1
@@ -51,9 +57,9 @@ scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
 scoreStraight :: Int -> Array Int -> Maybe Int
 scoreStraight n dice = if isStraight then points n else Nothing
   where isStraight = any (\die -> all (`elem` dice) (straightStartingFrom die)) dice
-	straightStartingFrom die = (die..(die+n-1))
+        straightStartingFrom die = (die..(die+n-1))
         points 4 = Just 30
-	points 5 = Just 40
+        points 5 = Just 40
         points _ = Nothing
 
 scoreYahtzee :: Array Int -> Maybe Int
