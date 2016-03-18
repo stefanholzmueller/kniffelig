@@ -21,14 +21,15 @@ import Yahtzee
 data Query a = ScoreQuery Category a
 	     | Roll a
 
+type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
-type State = { dice :: Array Int, scores :: Array ScoreField }
+type State = { dice :: Array Die, scores :: Array ScoreField }
 
 initialState :: State
-initialState = { dice: [1,2,3,4,5],
+initialState = { dice: replicate 5 { marked: false, value: 1},
                  scores: [ 
                            { category: Aces, score: Nothing },
-                           { category: Twos, score: Just 4 }
+                           { category: Twos, score: Just 123 }
                          ]
                }
 
@@ -39,7 +40,8 @@ ui = component render eval
   render :: State -> ComponentHTML Query
   render state =
     H.div_ [
-      H.div_ [ H.text (show state.dice), H.button [E.onClick (E.input_ Roll)] [ H.text "Würfeln" ] ],
+      H.div_ [ H.button [E.onClick (E.input_ Roll)] [ H.text "Würfeln" ] ],
+      H.div_ (map (\die -> H.text (show die.value)) state.dice),
       H.table_ [
         H.tbody_ (map renderScoreField state.scores)
       ]   
@@ -58,7 +60,7 @@ ui = component render eval
   eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
   eval (Roll next) = do
     dice <- liftEff' (sequence (replicate 5 (randomInt 1 6)))
-    modify (\state -> state { dice = dice })
+    modify (\state -> state { dice = map (\d -> { marked: false, value: d}) dice })
     pure next
     
   eval (ScoreQuery category next) = do
