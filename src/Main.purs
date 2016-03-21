@@ -12,7 +12,9 @@ import Data.Traversable (sequence)
 
 import Halogen
 import Halogen.Util (appendToBody, onLoad)
+import qualified Halogen.HTML.Core as C
 import qualified Halogen.HTML.Indexed as H
+import qualified Halogen.HTML.Properties as P
 import qualified Halogen.HTML.Events.Indexed as E
 
 import Yahtzee
@@ -26,7 +28,7 @@ type ScoreField = { category :: Category, score :: Maybe Int }
 type State = { dice :: Array Die, scores :: Array ScoreField }
 
 initialState :: State
-initialState = { dice: replicate 5 { marked: false, value: 1},
+initialState = { dice: replicate 5 { marked: false, value: 1 },
                  scores: [ 
                            { category: Aces, score: Nothing },
                            { category: Twos, score: Just 123 }
@@ -40,12 +42,16 @@ ui = component render eval
   render :: State -> ComponentHTML Query
   render state =
     H.div_ [
-      H.div_ [ H.button [E.onClick (E.input_ Roll)] [ H.text "Würfeln" ] ],
-      H.div_ (map (\die -> H.text (show die.value)) state.dice),
+      H.div_ [
+        H.button [ E.onClick (E.input_ Roll) ] [ H.text "Würfeln" ]
+      ],
+      Halogen.HTML.Elements.div [ (P.class_ (C.className "dice")) ] (map renderDie state.dice),
       H.table_ [
         H.tbody_ (map renderScoreField state.scores)
       ]   
     ]
+
+  renderDie die = Halogen.HTML.Elements.img [ (P.class_ (C.className "die")), (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
 
   renderScoreField sf = H.tr_ [
                           H.td_ [ H.text (showCategory sf.category) ],
@@ -60,7 +66,7 @@ ui = component render eval
   eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
   eval (Roll next) = do
     dice <- liftEff' (sequence (replicate 5 (randomInt 1 6)))
-    modify (\state -> state { dice = map (\d -> { marked: false, value: d}) dice })
+    modify (\state -> state { dice = map (\d -> { marked: false, value: d }) dice })
     pure next
     
   eval (ScoreQuery category next) = do
