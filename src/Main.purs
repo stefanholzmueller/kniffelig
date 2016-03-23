@@ -85,5 +85,9 @@ ui = component render eval
 
 main :: forall eff. Eff (HalogenEffects (random::RANDOM | eff)) Unit
 main = runAff throwException (const (pure unit)) $ do
-  app <- runUI ui initialState
+  ds <- liftEff' (sequence (replicate 5 (randomInt 1 6)))
+  let dice = map (\d -> { marked: false, value: d }) ds 
+  let x = (dice::(Array Die))
+  let s = (initialState { dice = dice })::State
+  app <- runUI ui s
   onLoad $ appendToBody app.node
