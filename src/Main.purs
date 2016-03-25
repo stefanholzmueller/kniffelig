@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff(), runAff)
+import Control.Monad.Aff --(Aff(), liftEff', runAff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (throwException)
 import Control.Monad.Eff.Random
@@ -11,7 +11,7 @@ import Data.Maybe
 import Data.Traversable (sequence)
 
 import Halogen
-import Halogen.Util (appendToBody, onLoad)
+import Halogen.Util (awaitBody, runHalogenAff)
 import qualified Halogen.HTML.Core as C
 import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Properties.Indexed as P
@@ -28,6 +28,8 @@ type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
 type State = { dice :: Array Die, scores :: Array ScoreField }
 
+type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
+
 initialState :: State
 initialState = { dice: replicate 5 { marked: false, value: 1 },  -- initialState random?
                  scores: [ 
@@ -36,8 +38,8 @@ initialState = { dice: replicate 5 { marked: false, value: 1 },  -- initialState
                          ]
                }
 
-ui :: forall eff. Component State Query (Aff (random::RANDOM | eff))
-ui = component render eval
+ui :: forall eff. Component State Query (Aff (AppEffects eff))
+ui = component { render, eval }
   where
 
   render :: State -> ComponentHTML Query
@@ -68,10 +70,10 @@ ui = component render eval
           showCategory Twos = "Zweier"
           showCategory _ = "not yet translated"
 
-  eval :: Natural Query (ComponentDSL State Query (Aff (random::RANDOM | eff)))
+  eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Roll next) = do
-    dice <- liftEff' (sequence (replicate 5 (randomInt 1 6)))
-    modify (\state -> state { dice = map (\d -> { marked: false, value: d }) dice })
+    let dice = [1,2,3,4,5]
+    modify (_ { dice = map (\d -> { marked: false, value: d }) dice })
     pure next
 
   eval (MarkDie i next) = do
@@ -83,11 +85,16 @@ ui = component render eval
     pure next
       where setScore sf = if sf.category == category then { category: category, score: Just 123 } else sf
 
-main :: forall eff. Eff (HalogenEffects (random::RANDOM | eff)) Unit
-main = runAff throwException (const (pure unit)) $ do
-  ds <- liftEff' (sequence (replicate 5 (randomInt 1 6)))
+randomDice5 :: forall eff. Eff (random :: RANDOM | eff) (Array Int)
+randomDice5 = sequence (replicate 5 (randomInt 1 6))
+
+randomAff :: forall eff. Aff (random :: RANDOM | eff) (Array Int)
+randomAff = fromEff randomDice5
+
+main :: forall eff. Eff (AppEffects (eff)) Unit
+main = runHalogenAff do
+  ds <- randomAff
   let dice = map (\d -> { marked: false, value: d }) ds 
-  let x = (dice::(Array Die))
-  let s = (initialState { dice = dice })::State
-  app <- runUI ui s
-  onLoad $ appendToBody app.node
+  let randomState = (initialState { dice = dice })::State
+  body <- awaitBody
+  runUI ui randomState body
