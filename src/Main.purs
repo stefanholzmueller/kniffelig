@@ -6,9 +6,10 @@ import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
-import Data.Array (alterAt, replicate)
+import Data.Array (alterAt, length, range, replicate, zip)
 import Data.Maybe
 import Data.Traversable (sequence)
+import Data.Tuple
 
 import Halogen
 import Halogen.Util (awaitBody, runHalogenAff)
@@ -40,16 +41,16 @@ ui = component { render, eval }
       H.div_ [
         H.button [ E.onClick (E.input_ Roll) ] [ H.text "Würfeln" ]
       ],
-      H.div_ (map renderDie state.dice),
+      H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
       H.table_ [
         H.tbody_ (map renderScoreField state.scores)
       ]   
     ]
 
-  renderDie die = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
+  renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
     where
       classes = P.classes if die.marked then [ C.className "die", C.className "marked" ] else [ C.className "die" ]
-      onclick = E.onClick (E.input_ (MarkDie 1))
+      onclick = E.onClick (E.input_ (MarkDie i))
 
 
   renderScoreField sf = H.tr_ [
@@ -64,8 +65,8 @@ ui = component { render, eval }
 
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Roll next) = do
-    let dice = [1,2,3,4,5]
-    modify (_ { dice = map (\d -> { marked: false, value: d }) dice })
+    ds <- fromEff (sequence (replicate 5 (randomInt 1 6)))
+    modify (_ { dice = map (\d -> { marked: false, value: d }) ds })
     pure next
 
   eval (MarkDie i next) = do
@@ -76,6 +77,9 @@ ui = component { render, eval }
     modify (\state -> state { scores = map setScore state.scores })
     pure next
       where setScore sf = if sf.category == category then { category: category, score: Just 123 } else sf
+
+zipWithIndex :: forall a. Array a -> Array (Tuple a Int)
+zipWithIndex array = zip array (range 0 (length array))
 
 
 main :: forall eff. Eff (AppEffects (eff)) Unit
