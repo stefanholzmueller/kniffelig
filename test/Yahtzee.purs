@@ -1,9 +1,7 @@
 module Test.Yahtzee where
 
-import Prelude (class Show, Unit, bind, pure, return, show, (++), (==), (<<<), (||))
-import Control.Monad.Eff (runPure)
+import Prelude (class Show, Unit, bind, return, show, (++), (==), (<<<), (||))
 import Control.Monad.Eff.Console (print)
-import Control.Monad.Eff.Exception (catchException)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
 import Data.Array ((..), sort, nub, intersect)
 import Data.Array.Unsafe (head, tail)
@@ -12,7 +10,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Test.Assert.Simple (assertEqual)
 import Test.StrongCheck (class Arbitrary, QC, Result, (<?>), smallCheck, quickCheck)
 import Test.StrongCheck.Gen (chooseInt, nChooseK, shuffleArray, vectorOf)
-import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance), score, scoreStr)
+import Yahtzee (Category(Aces, Twos, ThreeOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance), score)
 
 
 tests :: QC Unit
@@ -21,11 +19,7 @@ tests = do
   assertEqual (score Aces [4,1,6,1,1]) (Just 3)
   assertEqual (score Twos [4,2,6,2,1]) (Just 4)
   
-  let effScore = scoreStr "Twos" [4,2,6,2,1]
-  let errorHandler error = pure Nothing
-  let caught = catchException errorHandler effScore
-  let pureScore = runPure caught
-  assertEqual (pureScore) (Just 4)
+  assertEqual (score Twos [4,2,6,2,1]) (Just 4)
 
   assertEqual (score ThreeOfAKind [4,2,6,2,1]) Nothing
   assertEqual (score ThreeOfAKind [2,2,6,2,1]) (Just 13)
@@ -66,10 +60,8 @@ instance arbitraryFullHouseDice :: Arbitrary FullHouseDice where
                  return (FullHouseDice shuffled)
 
 propFullHouse :: FullHouseDice -> Result
-propFullHouse (FullHouseDice dice) = let score = scoreFn dice
-			    in score == Just 25 <?> show dice ++ " made the test fail with output: " ++ show score
-  where handler error = pure Nothing
-	scoreFn dice  = runPure (catchException handler (scoreStr "FullHouse" dice))
+propFullHouse (FullHouseDice dice) = let option = score FullHouse dice
+       	                              in option == Just 25 <?> show dice ++ " made the test fail with output: " ++ show option
 
 propSmallStraight :: RandomDice -> Result
 propSmallStraight (RandomDice dice) = actual == expected <?> show dice ++ " actual=" ++ show actual

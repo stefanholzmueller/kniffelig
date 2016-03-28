@@ -24,6 +24,8 @@ data Category = Aces
 derive instance genericCategory :: Generic Category
 instance eqCategory :: Eq Category where
   eq = gEq
+instance showCategory :: Show Category where
+  show = gShow
 
 
 score :: Category -> Array Int -> Maybe Int
