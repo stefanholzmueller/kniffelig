@@ -52,7 +52,6 @@ ui = component { render, eval }
       classes = P.classes if die.marked then [ C.className "die", C.className "marked" ] else [ C.className "die" ]
       onclick = E.onClick (E.input_ (MarkDie i))
 
-
   renderScoreField sf = H.tr_ [
                           H.td_ [ H.text (showCategory sf.category) ],
                           H.td props [ H.text label ]
@@ -66,12 +65,15 @@ ui = component { render, eval }
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Roll next) = do
     ds <- fromEff (sequence (replicate 5 (randomInt 1 6)))
-    modify (_ { dice = map (\d -> { marked: false, value: d }) ds })
+    modify (\state -> state { dice = rerollMarkedDice state.dice ds })
     pure next
+      where rerollMarkedDice oldDice newPips = map merge (zip oldDice newPips)
+            merge (Tuple die d)              = if die.marked then { marked: false, value: d } else die
 
   eval (MarkDie i next) = do
-    modify (\state -> state { dice = fromMaybe state.dice (alterAt i (\die -> Just { marked: not die.marked, value: die.value }) state.dice) })
+    modify (\state -> state { dice = toggleDie i state.dice })
     pure next
+      where toggleDie i dice = fromMaybe dice (alterAt i (\die -> Just die { marked = not die.marked }) dice) 
     
   eval (ScoreQuery category next) = do
     modify (\state -> state { scores = map setScore state.scores })
