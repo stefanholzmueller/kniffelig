@@ -15,8 +15,8 @@ import Halogen
 import Halogen.Util (awaitBody, runHalogenAff)
 import qualified Halogen.HTML.Core as C
 import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Properties.Indexed as P
 import qualified Halogen.HTML.Events.Indexed as E
+import qualified Halogen.HTML.Properties.Indexed as P
 
 import Yahtzee
 
@@ -31,6 +31,11 @@ data Query a = ScoreQuery Category a
              | MarkDie Int a
 
 
+upperSectionCategories :: Array Category
+upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
+lowerSectionCategories :: Array Category
+lowerSectionCategories = [ ThreeOfAKind, FourOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance ]
+
 ui :: forall eff. Component State Query (Aff (AppEffects eff))
 ui = component { render, eval }
   where
@@ -43,46 +48,65 @@ ui = component { render, eval }
         H.button [ E.onClick (E.input_ Roll) ] [ H.text "Markierte Würfel nochmal werfen" ]
       ],
       H.table_ [
-        H.tbody_ (map renderScoreField state.scores)
+        H.tbody_ (map renderScoreRow state.scores)
       ]   
     ]
-
-  renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
     where
-      classes = P.classes if die.marked then [ C.className "die", C.className "marked" ] else [ C.className "die" ]
-      onclick = E.onClick (E.input_ (MarkDie i))
+    renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
+        where
+        classes = P.classes ([ C.className "die" ] ++ if die.marked then [ C.className "marked" ] else [])
+        onclick = E.onClick (E.input_ (MarkDie i))
 
-  renderScoreField sf = H.tr_ [
-                          H.td_ [ H.text (showCategory sf.category) ],
-                          H.td props [ H.text label ]
-                        ]
-    where props = if isNothing sf.score then [ E.onClick (E.input_ (ScoreQuery sf.category)) ] else [] 
-          label = show sf.score
-          showCategory Aces = "Einser"
-          showCategory Twos = "Zweier"
-          showCategory Threes = "Dreier"
-          showCategory Fours = "Vierer"
-          showCategory Fives = "Fünfer"
-          showCategory Sixes = "Sechser"
-          showCategory _ = "not yet translated"
+    renderScoreRow sf = H.tr_ [
+                            H.td_ [ H.text (showCategory sf.category) ],
+                            if isNothing sf.score
+                              then showOption
+                              else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust sf.score ]
+                          ]
+      where showOption = let option = Yahtzee.score sf.category (map (\die -> die.value) state.dice)
+                             onclick = E.onClick (E.input_ (ScoreQuery sf.category)) 
+                         in if isJust option
+                            then H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ showJust option ]
+                            else H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
+            showJust maybe = show $ fromMaybe 0 maybe
+            showCategory Aces = "Einser"
+            showCategory Twos = "Zweier"
+            showCategory Threes = "Dreier"
+            showCategory Fours = "Vierer"
+            showCategory Fives = "Fünfer"
+            showCategory Sixes = "Sechser"
+            showCategory ThreeOfAKind = "Dreierpasch"
+            showCategory FourOfAKind = "Viererpasch"
+            showCategory FullHouse = "Full House"
+            showCategory SmallStraight = "Kleine Straße"
+            showCategory LargeStraight = "Große Straße"
+            showCategory Yahtzee = "Yahtzee!"
+            showCategory Chance = "Chance"
 
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Roll next) = do
     ds <- fromEff (sequence (replicate 5 (randomInt 1 6)))
     modify (\state -> state { dice = rerollMarkedDice state.dice ds })
     pure next
-      where rerollMarkedDice oldDice newPips = map merge (zip oldDice newPips)
-            merge (Tuple die d)              = if die.marked then { marked: false, value: d } else die
+      where rerollMarkedDice oldDice ds = map merge (zip oldDice ds)
+            merge (Tuple die d)         = if die.marked then { marked: false, value: d } else die
 
   eval (MarkDie i next) = do
     modify (\state -> state { dice = toggleDie i state.dice })
     pure next
       where toggleDie i dice = fromMaybe dice (alterAt i (\die -> Just die { marked = not die.marked }) dice) 
     
-  eval (ScoreQuery category next) = do
-    modify (\state -> state { scores = map setScore state.scores })
+  eval (ScoreQuery category next) = do -- and then roll dice
+    modify updateScores
     pure next
-      where setScore sf = if sf.category == category then { category: category, score: Just 123 } else sf
+      where
+      updateScores state = state { scores = map setScore state.scores }
+        where setScore sf = if sf.category == category
+                            then let option = Yahtzee.score category (map (\die -> die.value) state.dice)
+                                  in if isJust option
+                                     then sf { score = option }
+                                     else sf { score = Nothing }
+                            else sf
 
 zipWithIndex :: forall a. Array a -> Array (Tuple a Int)
 zipWithIndex array = zip array (range 0 (length array))
@@ -91,9 +115,8 @@ zipWithIndex array = zip array (range 0 (length array))
 main :: forall eff. Eff (AppEffects (eff)) Unit
 main = runHalogenAff do
   ds <- fromEff (sequence (replicate 5 (randomInt 1 6)))
-  let upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
   let initialState = { dice: map (\d -> { marked: false, value: d }) ds,
-                       scores: map (\c -> { category: c, score: Nothing }) upperSectionCategories
+                       scores: map (\c -> { category: c, score: Nothing }) (upperSectionCategories ++ lowerSectionCategories)
                      }
   body <- awaitBody
   runUI ui initialState body
