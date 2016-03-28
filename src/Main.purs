@@ -38,10 +38,10 @@ ui = component { render, eval }
   render :: State -> ComponentHTML Query
   render state =
     H.div_ [
-      H.div_ [
-        H.button [ E.onClick (E.input_ Roll) ] [ H.text "Würfeln" ]
-      ],
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
+      H.div_ [
+        H.button [ E.onClick (E.input_ Roll) ] [ H.text "Markierte Würfel nochmal werfen" ]
+      ],
       H.table_ [
         H.tbody_ (map renderScoreField state.scores)
       ]   
@@ -60,6 +60,10 @@ ui = component { render, eval }
           label = show sf.score
           showCategory Aces = "Einser"
           showCategory Twos = "Zweier"
+          showCategory Threes = "Dreier"
+          showCategory Fours = "Vierer"
+          showCategory Fives = "Fünfer"
+          showCategory Sixes = "Sechser"
           showCategory _ = "not yet translated"
 
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
@@ -87,11 +91,9 @@ zipWithIndex array = zip array (range 0 (length array))
 main :: forall eff. Eff (AppEffects (eff)) Unit
 main = runHalogenAff do
   ds <- fromEff (sequence (replicate 5 (randomInt 1 6)))
+  let upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
   let initialState = { dice: map (\d -> { marked: false, value: d }) ds,
-                       scores: [ 
-                           { category: Aces, score: Nothing },
-                           { category: Twos, score: Just 123 }
-                       ]
+                       scores: map (\c -> { category: c, score: Nothing }) upperSectionCategories
                      }
   body <- awaitBody
   runUI ui initialState body
