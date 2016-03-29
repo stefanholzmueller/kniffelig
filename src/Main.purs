@@ -6,7 +6,8 @@ import Control.Monad.Aff (Aff())
 import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
-import Data.Array (alterAt, length, range, replicate, zip)
+import Data.Array (alterAt, filter, length, range, replicate, zip)
+import Data.Foldable (any, sum)
 import Data.Maybe
 import Data.Traversable (sequence)
 import Data.Tuple
@@ -48,21 +49,32 @@ ui = component { render, eval }
         H.button [ E.onClick (E.input_ Roll) ] [ H.text "Markierte Würfel nochmal werfen" ]
       ],
       H.table_ [
-        H.tbody_ (map renderScoreRow state.scores)
+        H.tbody_ $ map renderScoreRow (filterForCategories upperSectionCategories state.scores)
+            ++ [ H.tr_ [
+                   H.td_ [ H.text "Zwischensumme" ],
+                   H.td_ [ H.text $ show $ sumSection (filterForCategories upperSectionCategories state.scores) ]
+               ] ]
+            ++ map renderScoreRow (filterForCategories lowerSectionCategories state.scores)
+            ++ [ H.tr_ [
+                   H.td_ [ H.text "Zwischensumme unterer Teil" ],
+                   H.td_ [ H.text $ show $ sumSection (filterForCategories lowerSectionCategories state.scores) ]
+               ] ]
       ]   
     ]
     where
+    sumSection scores = sum $ map (\sf -> fromMaybe 0 sf.score) scores
+    filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
-        where
-        classes = P.classes ([ C.className "die" ] ++ if die.marked then [ C.className "marked" ] else [])
-        onclick = E.onClick (E.input_ (MarkDie i))
+      where
+      classes = P.classes ([ C.className "die" ] ++ if die.marked then [ C.className "marked" ] else [])
+      onclick = E.onClick (E.input_ (MarkDie i))
 
     renderScoreRow sf = H.tr_ [
-                            H.td_ [ H.text (showCategory sf.category) ],
-                            if isNothing sf.score
-                              then showOption
-                              else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust sf.score ]
-                          ]
+                          H.td_ [ H.text (showCategory sf.category) ],
+                          if isNothing sf.score
+                          then showOption
+                          else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust sf.score ]
+                        ]
       where showOption = let option = Yahtzee.score sf.category (map (\die -> die.value) state.dice)
                              onclick = E.onClick (E.input_ (ScoreQuery sf.category)) 
                          in if isJust option
@@ -119,8 +131,7 @@ pipsToDice = map (\d -> { marked: false, value: d })
 main :: forall eff. Eff (AppEffects (eff)) Unit
 main = runHalogenAff do
   ds <- fromEff randomPips5
-  let initialState = { dice: pipsToDice ds,
-                       scores: map (\c -> { category: c, score: Nothing }) (upperSectionCategories ++ lowerSectionCategories)
-                     }
+  let categories = upperSectionCategories ++ lowerSectionCategories
+  let initialState = { dice: pipsToDice ds, scores: map (\c -> { category: c, score: Nothing }) categories }
   body <- awaitBody
   runUI ui initialState body
