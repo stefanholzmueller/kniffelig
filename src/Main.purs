@@ -49,19 +49,38 @@ ui = component { render, eval }
         H.button [ E.onClick (E.input_ Roll) ] [ H.text "Markierte Würfel nochmal werfen" ]
       ],
       H.table_ [
-        H.tbody_ $ map renderScoreRow (filterForCategories upperSectionCategories state.scores)
-            ++ [ H.tr_ [
-                   H.td_ [ H.text "Zwischensumme" ],
-                   H.td_ [ H.text $ show $ sumSection (filterForCategories upperSectionCategories state.scores) ]
-               ] ]
-            ++ map renderScoreRow (filterForCategories lowerSectionCategories state.scores)
-            ++ [ H.tr_ [
-                   H.td_ [ H.text "Zwischensumme unterer Teil" ],
-                   H.td_ [ H.text $ show $ sumSection (filterForCategories lowerSectionCategories state.scores) ]
-               ] ]
+        H.tbody_ $ map renderScoreRow upperSectionScores
+                ++ [ H.tr_ [
+                       H.td_ [ H.text "Zwischensumme" ],
+                       H.td_ [ H.text $ show $ sumUpperSection ]
+                   ] ]
+                ++ [ H.tr_ [
+                       H.td_ [ H.text "Bonus" ],
+                       H.td_ [ H.text $ show $ bonusUpperSection ]
+                   ] ]
+                ++ [ H.tr_ [
+                       H.td_ [ H.text "Zwischensumme oberer Teil" ],
+                       H.td_ [ H.text $ show $ finalUpperSection ]
+                   ] ]
+                ++ map renderScoreRow lowerSectionScores
+                ++ [ H.tr_ [
+                       H.td_ [ H.text "Zwischensumme unterer Teil" ],
+                       H.td_ [ H.text $ show $ sumLowerSection ]
+                   ] ]
+                ++ [ H.tr_ [
+                       H.td_ [ H.text "Endsumme" ],
+                       H.td_ [ H.text $ show $ sumFinal ]
+                   ] ]
       ]   
     ]
     where
+    sumUpperSection = sumSection upperSectionScores
+    bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
+    finalUpperSection = sumUpperSection + bonusUpperSection
+    sumLowerSection = sumSection lowerSectionScores
+    sumFinal = finalUpperSection + sumLowerSection
+    upperSectionScores = filterForCategories upperSectionCategories state.scores
+    lowerSectionScores = filterForCategories lowerSectionCategories state.scores
     sumSection scores = sum $ map (\sf -> fromMaybe 0 sf.score) scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
