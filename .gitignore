@@ -1,0 +1,10 @@
+/bower_components/
+/node_modules/
+/.pulp-cache/
+/output/
+/src/
+/test/
+/.psci*
+/bower.json
+/package.json
+.*.swp
