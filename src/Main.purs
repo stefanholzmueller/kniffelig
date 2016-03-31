@@ -23,7 +23,7 @@ import Yahtzee
 
 
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
-type State = { dice :: Array Die, scores :: Array ScoreField }
+type State = { dice :: Array Die, rerolls :: Int, scores :: Array ScoreField }
 type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
 
@@ -31,22 +31,26 @@ data Query a = ScoreQuery Category a
 	     | Roll a
              | MarkDie Int a
 
-
 upperSectionCategories :: Array Category
 upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
 lowerSectionCategories :: Array Category
 lowerSectionCategories = [ ThreeOfAKind, FourOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance ]
+maxRerolls :: Int
+maxRerolls = 2
 
 ui :: forall eff. Component State Query (Aff (AppEffects eff))
 ui = component { render, eval }
   where
-
   render :: State -> ComponentHTML Query
   render state =
     H.div_ [
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
       H.div_ [
-        H.button [ E.onClick (E.input_ Roll) ] [ H.text "Markierte Würfel nochmal werfen" ]
+        H.button [ E.onClick (E.input_ Roll), P.enabled rerollsAllowed ] [ H.text "Markierte Würfel nochmal werfen" ],
+        H.p_ [ H.text if rerollsAllowed
+                 then "Noch " ++ show (maxRerolls - state.rerolls) ++ " Wiederholungswürfe möglich"
+                 else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
+        ]
       ],
       H.table_ [
         H.tbody_ $ map renderScoreRow upperSectionScores
@@ -74,6 +78,7 @@ ui = component { render, eval }
       ]   
     ]
     where
+    rerollsAllowed = state.rerolls < maxRerolls
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
@@ -117,13 +122,13 @@ ui = component { render, eval }
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Roll next) = do
     ds <- fromEff randomPips5
-    modify (\state -> state { dice = rerollMarkedDice state.dice ds })
+    modify (\state -> state { dice = rerollMarkedDice state.dice ds, rerolls = state.rerolls + 1 })
     pure next
       where rerollMarkedDice oldDice ds = map merge (zip oldDice ds)
             merge (Tuple die d)         = if die.marked then { marked: false, value: d } else die
 
   eval (MarkDie i next) = do
-    modify (\state -> state { dice = toggleDie i state.dice })
+    modify (\state -> state { dice = if state.rerolls < maxRerolls then toggleDie i state.dice else state.dice })
     pure next
       where toggleDie i dice = fromMaybe dice (alterAt i (\die -> Just die { marked = not die.marked }) dice) 
     
@@ -132,7 +137,7 @@ ui = component { render, eval }
     modify (updateScores ds)
     pure next
       where
-      updateScores ds state = state { scores = map setScore state.scores, dice = pipsToDice ds }
+      updateScores ds state = state { scores = map setScore state.scores, dice = pipsToDice ds, rerolls = 0 }
         where setScore sf = if sf.category == category
                             then let option = Yahtzee.score category (map (\die -> die.value) state.dice)
                                   in if isJust option then sf { score = option } else sf { score = Just 0 }
@@ -151,6 +156,6 @@ main :: forall eff. Eff (AppEffects (eff)) Unit
 main = runHalogenAff do
   ds <- fromEff randomPips5
   let categories = upperSectionCategories ++ lowerSectionCategories
-  let initialState = { dice: pipsToDice ds, scores: map (\c -> { category: c, score: Nothing }) categories }
+  let initialState = { dice: pipsToDice ds, rerolls: 0, scores: map (\c -> { category: c, score: Nothing }) categories }
   body <- awaitBody
   runUI ui initialState body
