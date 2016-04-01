@@ -46,10 +46,10 @@ ui = component { render, eval }
     H.div_ [
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
       H.div_ [
-        H.button [ E.onClick (E.input_ Roll), P.enabled rerollsAllowed ] [ H.text "Markierte Würfel nochmal werfen" ],
+        H.button [ E.onClick (E.input_ Roll), P.enabled (rerollsAllowed && anyDieMarked) ] [ H.text "Markierte Würfel nochmal werfen" ],
         H.p_ [ H.text if rerollsAllowed
-                 then "Noch " ++ show (maxRerolls - state.rerolls) ++ " Wiederholungswürfe möglich"
-                 else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
+                      then "Noch " ++ show rerollsPossible ++ " Wiederholungs" ++ (if rerollsPossible == 1 then "wurf" else "würfe") ++ " möglich"
+                      else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
         ]
       ],
       H.table_ [
@@ -79,6 +79,8 @@ ui = component { render, eval }
     ]
     where
     rerollsAllowed = state.rerolls < maxRerolls
+    rerollsPossible = maxRerolls - state.rerolls
+    anyDieMarked = any (\d -> d.marked) state.dice
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
