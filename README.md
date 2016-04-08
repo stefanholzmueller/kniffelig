@@ -1,3 +1,3 @@
-The dice game Yahtzee, implemented in PureScript with Halogen.
+The dice game Yahtzee, implemented in [PureScript](http://www.purescript.org/) with [Halogen](https://github.com/slamdata/purescript-halogen/).
 
-Deployed at: http://stefanholzmueller.github.io/kniffelig/dist/
+Playable at: http://stefanholzmueller.github.io/kniffelig/dist/
