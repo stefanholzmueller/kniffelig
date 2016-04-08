@@ -7,7 +7,7 @@ import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, filter, length, range, replicate, zip)
-import Data.Foldable (any, sum)
+import Data.Foldable (all, any, sum)
 import Data.Maybe
 import Data.Traversable (sequence)
 import Data.Tuple
@@ -30,6 +30,7 @@ type ScoreField = { category :: Category, score :: Maybe Int }
 data Query a = ScoreQuery Category a
 	     | Roll a
              | MarkDie Int a
+             | Restart a
 
 upperSectionCategories :: Array Category
 upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
@@ -45,12 +46,10 @@ ui = component { render, eval }
   render state =
     H.div_ [
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
-      H.div_ [
-        H.button [ E.onClick (E.input_ Roll), P.enabled (rerollsAllowed && anyDieMarked) ] [ H.text "Markierte Würfel nochmal werfen" ],
-        H.p_ [ H.text if rerollsAllowed
-                      then "Noch " ++ show rerollsPossible ++ " Wiederholungs" ++ (if rerollsPossible == 1 then "wurf" else "würfe") ++ " möglich"
-                      else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
-        ]
+      H.button [ E.onClick (E.input_ Roll), P.enabled (rerollsAllowed && anyDieMarked) ] [ H.text "Markierte Würfel nochmal werfen" ],
+      H.p_ [ H.text if rerollsAllowed
+                    then "Noch " ++ show rerollsPossible ++ " Wiederholungs" ++ (if rerollsPossible == 1 then "wurf" else "würfe") ++ " möglich"
+                    else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
       ],
       H.table_ [
         H.tbody_ $ map renderScoreRow upperSectionScores
@@ -75,9 +74,11 @@ ui = component { render, eval }
                        H.td_ [ H.text "Endsumme" ],
                        H.td_ [ H.text $ show $ sumFinal ]
                    ] ]
-      ]   
+      ],
+      H.p_ if gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
     ]
     where
+    gameOver = all (\sf -> isJust sf.score) state.scores
     rerollsAllowed = state.rerolls < maxRerolls
     rerollsPossible = maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
@@ -145,6 +146,11 @@ ui = component { render, eval }
                                   in if isJust option then sf { score = option } else sf { score = Just 0 }
                             else sf
 
+  eval (Restart next) = do
+    ds <- fromEff randomPips5
+    modify (\state -> makeInitialState ds)
+    pure next
+    
 zipWithIndex :: forall a. Array a -> Array (Tuple a Int)
 zipWithIndex array = zip array (range 0 (length array))
 
@@ -154,10 +160,16 @@ randomPips5 = sequence (replicate 5 (randomInt 1 6))
 pipsToDice :: Array Int -> Array Die
 pipsToDice = map (\d -> { marked: false, value: d })
 
+makeInitialState :: Array Int -> State
+makeInitialState ds = let categories = upperSectionCategories ++ lowerSectionCategories
+                       in { dice: pipsToDice ds,
+                            rerolls: 0,
+                            scores: map (\c -> { category: c, score: Nothing }) categories
+                          }
+
 main :: forall eff. Eff (AppEffects (eff)) Unit
 main = runHalogenAff do
   ds <- fromEff randomPips5
-  let categories = upperSectionCategories ++ lowerSectionCategories
-  let initialState = { dice: pipsToDice ds, rerolls: 0, scores: map (\c -> { category: c, score: Nothing }) categories }
+  let initialState = makeInitialState ds
   body <- awaitBody
   runUI ui initialState body
