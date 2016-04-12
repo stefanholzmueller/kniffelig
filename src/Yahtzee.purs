@@ -31,6 +31,8 @@ type Score = { category :: Category, value :: Int }
 type GameState = { sumUpperSection :: Int
                  , bonusUpperSection :: Int
                  , finalUpperSection :: Int
+                 , sumLowerSection :: Int
+                 , finalSum :: Int
                  } 
 
 upperSectionCategories :: Array Category
@@ -45,13 +47,18 @@ recalculate :: Array Score -> GameState
 recalculate scores = { sumUpperSection: sumUpperSection
                      , bonusUpperSection: bonusUpperSection
                      , finalUpperSection: finalUpperSection
+                     , sumLowerSection: sumLowerSection
+                     , finalSum: finalSum
                      }
   where
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
-    sumSection scores = sum $ map (\score -> score.value) scores
+    sumLowerSection = sumSection lowerSectionScores
+    finalSum = finalUpperSection + sumLowerSection
+    sumSection scores = sum $ map (_.value) scores
     upperSectionScores = filterForCategories upperSectionCategories scores
+    lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
 
 

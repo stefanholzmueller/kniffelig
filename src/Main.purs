@@ -7,7 +7,7 @@ import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, filter, length, range, replicate, zip)
-import Data.Foldable (all, any, sum)
+import Data.Foldable (all, any)
 import Data.Maybe
 import Data.Traversable (sequence)
 import Data.Tuple
@@ -29,6 +29,8 @@ type State = { dice :: Array Die
              , sumUpperSection :: Int
              , bonusUpperSection :: Int
              , finalUpperSection :: Int
+             , sumLowerSection :: Int
+             , finalSum :: Int
              }
 type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
@@ -67,11 +69,11 @@ ui = component { render, eval }
                 ++ map renderScoreRow lowerSectionScores
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Zwischensumme unterer Teil" ],
-                       H.td_ [ H.text $ show $ sumLowerSection ]
+                       H.td_ [ H.text $ show $ state.sumLowerSection ]
                    ] ]
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Endsumme" ],
-                       H.td_ [ H.text $ show $ sumFinal ]
+                       H.td_ [ H.text $ show $ state.finalSum ]
                    ] ]
       ],
       H.p_ if gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
@@ -81,11 +83,8 @@ ui = component { render, eval }
     rerollsAllowed = state.rerolls < maxRerolls
     rerollsPossible = maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
-    sumLowerSection = sumSection lowerSectionScores
-    sumFinal = state.finalUpperSection + sumLowerSection
     upperSectionScores = filterForCategories Yahtzee.upperSectionCategories state.scores
     lowerSectionScores = filterForCategories Yahtzee.lowerSectionCategories state.scores
-    sumSection scores = sum $ map (\sf -> fromMaybe 0 sf.score) scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
       where
@@ -142,6 +141,8 @@ ui = component { render, eval }
                               , sumUpperSection: calculation.sumUpperSection
                               , bonusUpperSection: calculation.bonusUpperSection
                               , finalUpperSection: calculation.finalUpperSection
+                              , sumLowerSection: calculation.sumLowerSection
+                              , finalSum: calculation.finalSum
                               }
         where calculation = recalculate scores
               scores = map (\sf -> { category: sf.category, value: fromMaybe 0 sf.score }) justScores
@@ -174,6 +175,8 @@ makeInitialState ds = let categories = Yahtzee.upperSectionCategories ++ Yahtzee
                           , sumUpperSection: 0
                           , bonusUpperSection: 0
                           , finalUpperSection: 0
+                          , sumLowerSection: 0
+                          , finalSum: 0
                           }
 
 main :: forall eff. Eff (AppEffects (eff)) Unit
