@@ -23,7 +23,13 @@ import Yahtzee
 
 
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
-type State = { dice :: Array Die, rerolls :: Int, scores :: Array ScoreField }
+type State = { dice :: Array Die
+             , rerolls :: Int
+             , scores :: Array ScoreField
+             , sumUpperSection :: Int
+             , bonusUpperSection :: Int
+             , finalUpperSection :: Int
+             }
 type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
 
@@ -31,13 +37,6 @@ data Query a = ScoreQuery Category a
 	     | Roll a
              | MarkDie Int a
              | Restart a
-
-upperSectionCategories :: Array Category
-upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
-lowerSectionCategories :: Array Category
-lowerSectionCategories = [ ThreeOfAKind, FourOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance ]
-maxRerolls :: Int
-maxRerolls = 2
 
 ui :: forall eff. Component State Query (Aff (AppEffects eff))
 ui = component { render, eval }
@@ -55,15 +54,15 @@ ui = component { render, eval }
         H.tbody_ $ map renderScoreRow upperSectionScores
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Zwischensumme" ],
-                       H.td_ [ H.text $ show $ sumUpperSection ]
+                       H.td_ [ H.text $ show $ state.sumUpperSection ]
                    ] ]
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Bonus" ],
-                       H.td_ [ H.text $ show $ bonusUpperSection ]
+                       H.td_ [ H.text $ show $ state.bonusUpperSection ]
                    ] ]
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Zwischensumme oberer Teil" ],
-                       H.td_ [ H.text $ show $ finalUpperSection ]
+                       H.td_ [ H.text $ show $ state.finalUpperSection ]
                    ] ]
                 ++ map renderScoreRow lowerSectionScores
                 ++ [ H.tr_ [
@@ -82,13 +81,10 @@ ui = component { render, eval }
     rerollsAllowed = state.rerolls < maxRerolls
     rerollsPossible = maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
-    sumUpperSection = sumSection upperSectionScores
-    bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
-    finalUpperSection = sumUpperSection + bonusUpperSection
     sumLowerSection = sumSection lowerSectionScores
-    sumFinal = finalUpperSection + sumLowerSection
-    upperSectionScores = filterForCategories upperSectionCategories state.scores
-    lowerSectionScores = filterForCategories lowerSectionCategories state.scores
+    sumFinal = state.finalUpperSection + sumLowerSection
+    upperSectionScores = filterForCategories Yahtzee.upperSectionCategories state.scores
+    lowerSectionScores = filterForCategories Yahtzee.lowerSectionCategories state.scores
     sumSection scores = sum $ map (\sf -> fromMaybe 0 sf.score) scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
@@ -135,13 +131,23 @@ ui = component { render, eval }
     pure next
       where toggleDie i dice = fromMaybe dice (alterAt i (\die -> Just die { marked = not die.marked }) dice) 
     
-  eval (ScoreQuery category next) = do -- and then roll dice
+  eval (ScoreQuery category next) = do
     ds <- fromEff randomPips5
     modify (updateScores ds)
     pure next
       where
-      updateScores ds state = state { scores = map setScore state.scores, dice = pipsToDice ds, rerolls = 0 }
-        where setScore sf = if sf.category == category
+      updateScores ds state = { scores: newScores
+                              , dice: pipsToDice ds
+                              , rerolls: 0
+                              , sumUpperSection: calculation.sumUpperSection
+                              , bonusUpperSection: calculation.bonusUpperSection
+                              , finalUpperSection: calculation.finalUpperSection
+                              }
+        where calculation = recalculate scores
+              scores = map (\sf -> { category: sf.category, value: fromMaybe 0 sf.score }) justScores
+              justScores = filter (\sf -> isJust sf.score) newScores
+              newScores = map setScore state.scores
+              setScore sf = if sf.category == category
                             then let option = Yahtzee.score category (map (\die -> die.value) state.dice)
                                   in if isJust option then sf { score = option } else sf { score = Just 0 }
                             else sf
@@ -161,10 +167,13 @@ pipsToDice :: Array Int -> Array Die
 pipsToDice = map (\d -> { marked: false, value: d })
 
 makeInitialState :: Array Int -> State
-makeInitialState ds = let categories = upperSectionCategories ++ lowerSectionCategories
-                       in { dice: pipsToDice ds,
-                            rerolls: 0,
-                            scores: map (\c -> { category: c, score: Nothing }) categories
+makeInitialState ds = let categories = Yahtzee.upperSectionCategories ++ Yahtzee.lowerSectionCategories
+                       in { dice: pipsToDice ds
+                          , rerolls: 0
+                          , scores: map (\c -> { category: c, score: Nothing }) categories
+                          , sumUpperSection: 0
+                          , bonusUpperSection: 0
+                          , finalUpperSection: 0
                           }
 
 main :: forall eff. Eff (AppEffects (eff)) Unit

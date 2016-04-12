@@ -27,6 +27,33 @@ instance eqCategory :: Eq Category where
 instance showCategory :: Show Category where
   show = gShow
 
+type Score = { category :: Category, value :: Int }
+type GameState = { sumUpperSection :: Int
+                 , bonusUpperSection :: Int
+                 , finalUpperSection :: Int
+                 } 
+
+upperSectionCategories :: Array Category
+upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
+lowerSectionCategories :: Array Category
+lowerSectionCategories = [ ThreeOfAKind, FourOfAKind, FullHouse, SmallStraight, LargeStraight, Yahtzee, Chance ]
+maxRerolls :: Int
+maxRerolls = 2
+
+
+recalculate :: Array Score -> GameState
+recalculate scores = { sumUpperSection: sumUpperSection
+                     , bonusUpperSection: bonusUpperSection
+                     , finalUpperSection: finalUpperSection
+                     }
+  where
+    sumUpperSection = sumSection upperSectionScores
+    bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
+    finalUpperSection = sumUpperSection + bonusUpperSection
+    sumSection scores = sum $ map (\score -> score.value) scores
+    upperSectionScores = filterForCategories upperSectionCategories scores
+    filterForCategories categories = filter (\sf -> any (==sf.category) categories)
+
 
 score :: Category -> Array Int -> Maybe Int
 score Aces = scorePips 1
