@@ -23,15 +23,10 @@ import Yahtzee
 
 
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
-type State = { dice :: Array Die
-             , rerolls :: Int
-             , scores :: Array ScoreField
-             , sumUpperSection :: Int
-             , bonusUpperSection :: Int
-             , finalUpperSection :: Int
-             , sumLowerSection :: Int
-             , finalSum :: Int
-             }
+type State = GameState ( dice :: Array Die
+                       , rerolls :: Int
+                       , scores :: Array ScoreField
+                       )
 type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
 
