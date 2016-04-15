@@ -28,13 +28,12 @@ instance showCategory :: Show Category where
   show = gShow
 
 type Score = { category :: Category, value :: Int }
-type GameState more = { sumUpperSection :: Int
-                 , bonusUpperSection :: Int
-                 , finalUpperSection :: Int
-                 , sumLowerSection :: Int
-                 , finalSum :: Int
-                 | more
-                 } 
+type Calculations = { sumUpperSection :: Int
+                    , bonusUpperSection :: Int
+                    , finalUpperSection :: Int
+                    , sumLowerSection :: Int
+                    , finalSum :: Int
+                    } 
 
 upperSectionCategories :: Array Category
 upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
@@ -44,7 +43,7 @@ maxRerolls :: Int
 maxRerolls = 2
 
 
-recalculate :: Array Score -> GameState ()
+recalculate :: Array Score -> Calculations
 recalculate scores = { sumUpperSection: sumUpperSection
                      , bonusUpperSection: bonusUpperSection
                      , finalUpperSection: finalUpperSection

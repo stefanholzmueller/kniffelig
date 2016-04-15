@@ -23,10 +23,11 @@ import Yahtzee
 
 
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
-type State = GameState ( dice :: Array Die
-                       , rerolls :: Int
-                       , scores :: Array ScoreField
-                       )
+type State = { dice :: Array Die
+             , rerolls :: Int
+             , scores :: Array ScoreField
+             , calculations :: Calculations
+             }
 type Die = { marked :: Boolean, value :: Int }
 type ScoreField = { category :: Category, score :: Maybe Int }
 
@@ -51,24 +52,24 @@ ui = component { render, eval }
         H.tbody_ $ map renderScoreRow upperSectionScores
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Zwischensumme" ],
-                       H.td_ [ H.text $ show $ state.sumUpperSection ]
+                       H.td_ [ H.text $ show $ state.calculations.sumUpperSection ]
                    ] ]
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Bonus" ],
-                       H.td_ [ H.text $ show $ state.bonusUpperSection ]
+                       H.td_ [ H.text $ show $ state.calculations.bonusUpperSection ]
                    ] ]
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Zwischensumme oberer Teil" ],
-                       H.td_ [ H.text $ show $ state.finalUpperSection ]
+                       H.td_ [ H.text $ show $ state.calculations.finalUpperSection ]
                    ] ]
                 ++ map renderScoreRow lowerSectionScores
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Zwischensumme unterer Teil" ],
-                       H.td_ [ H.text $ show $ state.sumLowerSection ]
+                       H.td_ [ H.text $ show $ state.calculations.sumLowerSection ]
                    ] ]
                 ++ [ H.tr_ [
                        H.td_ [ H.text "Endsumme" ],
-                       H.td_ [ H.text $ show $ state.finalSum ]
+                       H.td_ [ H.text $ show $ state.calculations.finalSum ]
                    ] ]
       ],
       H.p_ if gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
@@ -133,11 +134,12 @@ ui = component { render, eval }
       updateScores ds state = { scores: newScores
                               , dice: pipsToDice ds
                               , rerolls: 0
-                              , sumUpperSection: calculation.sumUpperSection
-                              , bonusUpperSection: calculation.bonusUpperSection
-                              , finalUpperSection: calculation.finalUpperSection
-                              , sumLowerSection: calculation.sumLowerSection
-                              , finalSum: calculation.finalSum
+                              , calculations: { sumUpperSection: calculation.sumUpperSection
+                                              , bonusUpperSection: calculation.bonusUpperSection
+                                              , finalUpperSection: calculation.finalUpperSection
+                                              , sumLowerSection: calculation.sumLowerSection
+                                              , finalSum: calculation.finalSum
+                                              }
                               }
         where calculation = recalculate scores
               scores = map (\sf -> { category: sf.category, value: fromMaybe 0 sf.score }) justScores
@@ -167,11 +169,12 @@ makeInitialState ds = let categories = Yahtzee.upperSectionCategories ++ Yahtzee
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , scores: map (\c -> { category: c, score: Nothing }) categories
-                          , sumUpperSection: 0
-                          , bonusUpperSection: 0
-                          , finalUpperSection: 0
-                          , sumLowerSection: 0
-                          , finalSum: 0
+                          , calculations: { sumUpperSection: 0
+                                          , bonusUpperSection: 0
+                                          , finalUpperSection: 0
+                                          , sumLowerSection: 0
+                                          , finalSum: 0
+                                          }
                           }
 
 main :: forall eff. Eff (AppEffects (eff)) Unit
