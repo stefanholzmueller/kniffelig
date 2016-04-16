@@ -27,12 +27,13 @@ instance eqCategory :: Eq Category where
 instance showCategory :: Show Category where
   show = gShow
 
-type Score = { category :: Category, value :: Int }
+type Score = { category :: Category, value :: Maybe Int }
 type GameState = { sumUpperSection :: Int
                  , bonusUpperSection :: Int
                  , finalUpperSection :: Int
                  , sumLowerSection :: Int
                  , finalSum :: Int
+                 , gameOver :: Boolean
                  } 
 
 upperSectionCategories :: Array Category
@@ -49,14 +50,16 @@ recalculate scores = { sumUpperSection: sumUpperSection
                      , finalUpperSection: finalUpperSection
                      , sumLowerSection: sumLowerSection
                      , finalSum: finalSum
+                     , gameOver: gameOver
                      }
   where
+    gameOver = all (\s -> isJust s.value) scores
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
     sumLowerSection = sumSection lowerSectionScores
     finalSum = finalUpperSection + sumLowerSection
-    sumSection scores = sum $ map (_.value) scores
+    sumSection scores = sum $ map (\s -> fromMaybe 0 s.value) scores
     upperSectionScores = filterForCategories upperSectionCategories scores
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)

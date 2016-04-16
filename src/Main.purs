@@ -7,7 +7,7 @@ import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, filter, length, range, replicate, zip)
-import Data.Foldable (all, any)
+import Data.Foldable (any)
 import Data.Maybe
 import Data.Traversable (sequence)
 import Data.Tuple
@@ -25,11 +25,10 @@ import Yahtzee
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
 type State = { dice :: Array Die
              , rerolls :: Int
-             , scores :: Array ScoreField
+             , scores :: Array Score
              , game :: GameState
              }
 type Die = { marked :: Boolean, value :: Int }
-type ScoreField = { category :: Category, score :: Maybe Int }
 
 data Query a = ScoreQuery Category a
 	     | Roll a
@@ -72,10 +71,9 @@ ui = component { render, eval }
                        H.td_ [ H.text $ show $ state.game.finalSum ]
                    ] ]
       ],
-      H.p_ if gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
+      H.p_ if state.game.gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
     ]
     where
-    gameOver = all (\sf -> isJust sf.score) state.scores
     rerollsAllowed = state.rerolls < maxRerolls
     rerollsPossible = maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
@@ -87,14 +85,14 @@ ui = component { render, eval }
       classes = P.classes ([ C.className "die" ] ++ if die.marked then [ C.className "marked" ] else [])
       onclick = E.onClick (E.input_ (MarkDie i))
 
-    renderScoreRow sf = H.tr_ [
-                          H.td_ [ H.text (showCategory sf.category) ],
-                          if isNothing sf.score
-                          then showOption
-                          else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust sf.score ]
-                        ]
-      where showOption = let option = Yahtzee.score sf.category (map (\die -> die.value) state.dice)
-                             onclick = E.onClick (E.input_ (ScoreQuery sf.category)) 
+    renderScoreRow s = H.tr_ [
+                         H.td_ [ H.text (showCategory s.category) ],
+                         if isNothing s.value
+                         then showOption
+                         else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust s.value ]
+                       ]
+      where showOption = let option = Yahtzee.score s.category (map (\die -> die.value) state.dice)
+                             onclick = E.onClick (E.input_ (ScoreQuery s.category)) 
                          in if isJust option
                             then H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ showJust option ]
                             else H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
@@ -136,13 +134,11 @@ ui = component { render, eval }
                               , rerolls: 0
                               , game: calculation
                               }
-        where calculation = recalculate scores
-              scores = map (\sf -> { category: sf.category, value: fromMaybe 0 sf.score }) justScores
-              justScores = filter (\sf -> isJust sf.score) newScores
+        where calculation = recalculate newScores
               newScores = map setScore state.scores
               setScore sf = if sf.category == category
                             then let option = Yahtzee.score category (map (\die -> die.value) state.dice)
-                                  in if isJust option then sf { score = option } else sf { score = Just 0 }
+                                  in if isJust option then sf { value = option } else sf { value = Just 0 }
                             else sf
 
   eval (Restart next) = do
@@ -163,12 +159,13 @@ makeInitialState :: Array Int -> State
 makeInitialState ds = let categories = Yahtzee.upperSectionCategories ++ Yahtzee.lowerSectionCategories
                        in { dice: pipsToDice ds
                           , rerolls: 0
-                          , scores: map (\c -> { category: c, score: Nothing }) categories
+                          , scores: map (\c -> { category: c, value: Nothing }) categories
                           , game: { sumUpperSection: 0
                                   , bonusUpperSection: 0
                                   , finalUpperSection: 0
                                   , sumLowerSection: 0
                                   , finalSum: 0
+                                  , gameOver: false
                                   }
                           }
 
