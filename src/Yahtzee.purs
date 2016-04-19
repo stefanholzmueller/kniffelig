@@ -35,6 +35,13 @@ type GameState = { sumUpperSection :: Int
                  , finalSum :: Int
                  , gameOver :: Boolean
                  } 
+type ScoreColumn = { ones :: Score
+                   , twos :: Score
+                   , threes :: Score
+                   , fours :: Score
+                   , fives :: Score
+                   , sixes :: Score
+                   }
 
 upperSectionCategories :: Array Category
 upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
@@ -44,8 +51,8 @@ maxRerolls :: Int
 maxRerolls = 2
 
 
-recalculate :: Array Score -> GameState
-recalculate scores = { sumUpperSection: sumUpperSection
+recalculate :: Array Score -> ScoreColumn -> GameState
+recalculate scores sc = { sumUpperSection: sumUpperSection
                      , bonusUpperSection: bonusUpperSection
                      , finalUpperSection: finalUpperSection
                      , sumLowerSection: sumLowerSection
@@ -60,7 +67,7 @@ recalculate scores = { sumUpperSection: sumUpperSection
     sumLowerSection = sumSection lowerSectionScores
     finalSum = finalUpperSection + sumLowerSection
     sumSection scores = sum $ map (\s -> fromMaybe 0 s.value) scores
-    upperSectionScores = filterForCategories upperSectionCategories scores
+    upperSectionScores = [ sc.ones, sc.twos, sc.threes, sc.fours, sc.fives, sc.sixes ]
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
 

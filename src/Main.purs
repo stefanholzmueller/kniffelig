@@ -7,7 +7,7 @@ import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, filter, length, range, replicate, zip)
-import Data.Foldable (any)
+import Data.Foldable (any, find)
 import Data.Maybe
 import Data.Traversable (sequence)
 import Data.Tuple
@@ -134,7 +134,15 @@ ui = component { render, eval }
                               , rerolls: 0
                               , game: calculation
                               }
-        where calculation = recalculate newScores
+        where calculation = recalculate newScores newScoreColumn
+              newScoreColumn = { ones: findScore Aces
+                               , twos: findScore Twos
+                               , threes: findScore Threes
+                               , fours: findScore Fours
+                               , fives: findScore Fives
+                               , sixes: findScore Sixes
+                               }
+              findScore c = fromMaybe { category: Aces, value: Nothing } $ find (\s -> s.category == c) newScores
               newScores = map setScore state.scores
               setScore sf = if sf.category == category
                             then let option = Yahtzee.score category (map (\die -> die.value) state.dice)
