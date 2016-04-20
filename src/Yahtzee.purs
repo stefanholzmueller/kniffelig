@@ -5,7 +5,35 @@ import Data.Array
 import Data.Foldable
 import Data.Generic
 import Data.Maybe
+import Data.Lens
 
+
+lensOnes :: Lens ScoreColumn ScoreColumn Score Score
+lensOnes = lens (_.ones) (\sc s -> sc { ones = s })
+lensTwos :: Lens ScoreColumn ScoreColumn Score Score
+lensTwos = lens (_.twos) (\sc s -> sc { twos = s })
+lensThrees :: Lens ScoreColumn ScoreColumn Score Score
+lensThrees = lens (_.threes) (\sc s -> sc { threes = s })
+lensFours :: Lens ScoreColumn ScoreColumn Score Score
+lensFours = lens (_.fours) (\sc s -> sc { fours = s })
+lensFives :: Lens ScoreColumn ScoreColumn Score Score
+lensFives = lens (_.fives) (\sc s -> sc { fives = s })
+lensSixes :: Lens ScoreColumn ScoreColumn Score Score
+lensSixes = lens (_.sixes) (\sc s -> sc { sixes = s })
+lensThreeOfAKind :: Lens ScoreColumn ScoreColumn Score Score
+lensThreeOfAKind = lens (_.threeOfAKind) (\sc s -> sc { threeOfAKind = s })
+lensFourOfAKind :: Lens ScoreColumn ScoreColumn Score Score
+lensFourOfAKind = lens (_.fourOfAKind) (\sc s -> sc { fourOfAKind = s })
+lensFullHouse :: Lens ScoreColumn ScoreColumn Score Score
+lensFullHouse = lens (_.fullHouse) (\sc s -> sc { fullHouse = s })
+lensSmallStraight :: Lens ScoreColumn ScoreColumn Score Score
+lensSmallStraight = lens (_.smallStraight) (\sc s -> sc { smallStraight = s })
+lensLargeStraigt :: Lens ScoreColumn ScoreColumn Score Score
+lensLargeStraigt = lens (_.largeStraight) (\sc s -> sc { largeStraight = s })
+lensYahtzee :: Lens ScoreColumn ScoreColumn Score Score
+lensYahtzee = lens (_.yahtzee) (\sc s -> sc { yahtzee = s })
+lensChance :: Lens ScoreColumn ScoreColumn Score Score
+lensChance = lens (_.chance) (\sc s -> sc { chance = s })
 
 data Category = Aces
               | Twos
@@ -41,6 +69,13 @@ type ScoreColumn = { ones :: Score
                    , fours :: Score
                    , fives :: Score
                    , sixes :: Score
+                   , threeOfAKind :: Score
+                   , fourOfAKind :: Score
+                   , fullHouse :: Score
+                   , smallStraight :: Score
+                   , largeStraight :: Score
+                   , yahtzee :: Score
+                   , chance :: Score
                    }
 
 upperSectionCategories :: Array Category
@@ -67,9 +102,8 @@ recalculate scores sc = { sumUpperSection: sumUpperSection
     sumLowerSection = sumSection lowerSectionScores
     finalSum = finalUpperSection + sumLowerSection
     sumSection scores = sum $ map (\s -> fromMaybe 0 s.value) scores
-    upperSectionScores = [ sc.ones, sc.twos, sc.threes, sc.fours, sc.fives, sc.sixes ]
-    lowerSectionScores = filterForCategories lowerSectionCategories scores
-    filterForCategories categories = filter (\sf -> any (==sf.category) categories)
+    upperSectionScores = [ sc.ones, sc.twos, sc.threes, sc.fours, sc.fives, sc.sixes ] :: Array Score
+    lowerSectionScores = [ sc.threeOfAKind, sc.fourOfAKind, sc.fullHouse, sc.smallStraight, sc.largeStraight, sc.yahtzee, sc.chance ] :: Array Score
 
 
 score :: Category -> Array Int -> Maybe Int

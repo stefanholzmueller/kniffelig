@@ -141,6 +141,13 @@ ui = component { render, eval }
                                , fours: findScore Fours
                                , fives: findScore Fives
                                , sixes: findScore Sixes
+                               , threeOfAKind: findScore ThreeOfAKind
+                               , fourOfAKind: findScore FourOfAKind
+                               , fullHouse: findScore FullHouse
+                               , smallStraight: findScore SmallStraight
+                               , largeStraight: findScore LargeStraight
+                               , yahtzee: findScore Yahtzee
+                               , chance: findScore Chance
                                }
               findScore c = fromMaybe { category: Aces, value: Nothing } $ find (\s -> s.category == c) newScores
               newScores = map setScore state.scores
