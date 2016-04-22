@@ -28,7 +28,8 @@ instance showCategory :: Show Category where
   show = gShow
 
 type Score = { category :: Category, value :: Maybe Int }
-type GameState = { sumUpperSection :: Int
+type GameState = { scores :: Array Score
+                 , sumUpperSection :: Int
                  , bonusUpperSection :: Int
                  , finalUpperSection :: Int
                  , sumLowerSection :: Int
@@ -44,14 +45,15 @@ maxRerolls :: Int
 maxRerolls = 2
 
 
-recalculate :: Array Score -> GameState
-recalculate scores = { sumUpperSection: sumUpperSection
-                     , bonusUpperSection: bonusUpperSection
-                     , finalUpperSection: finalUpperSection
-                     , sumLowerSection: sumLowerSection
-                     , finalSum: finalSum
-                     , gameOver: gameOver
-                     }
+recalculate :: Array Score -> Category -> Array Int -> GameState
+recalculate scores category dice = { scores: scores
+                                   , sumUpperSection: sumUpperSection
+                                   , bonusUpperSection: bonusUpperSection
+                                   , finalUpperSection: finalUpperSection
+                                   , sumLowerSection: sumLowerSection
+                                   , finalSum: finalSum
+                                   , gameOver: gameOver
+                                   }
   where
     gameOver = all (\s -> isJust s.value) scores
     sumUpperSection = sumSection upperSectionScores

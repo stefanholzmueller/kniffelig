@@ -19,18 +19,18 @@ import qualified Halogen.HTML.Indexed as H
 import qualified Halogen.HTML.Events.Indexed as E
 import qualified Halogen.HTML.Properties.Indexed as P
 
-import Yahtzee
+import qualified Yahtzee as Y
 
 
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
 type State = { dice :: Array Die
              , rerolls :: Int
-             , scores :: Array Score
-             , game :: GameState
+             , scores :: Array Y.Score
+             , game :: Y.GameState
              }
 type Die = { marked :: Boolean, value :: Int }
 
-data Query a = ScoreQuery Category a
+data Query a = ScoreQuery Y.Category a
 	     | Roll a
              | MarkDie Int a
              | Restart a
@@ -74,11 +74,11 @@ ui = component { render, eval }
       H.p_ if state.game.gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
     ]
     where
-    rerollsAllowed = state.rerolls < maxRerolls
-    rerollsPossible = maxRerolls - state.rerolls
+    rerollsAllowed = state.rerolls < Y.maxRerolls
+    rerollsPossible = Y.maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
-    upperSectionScores = filterForCategories Yahtzee.upperSectionCategories state.scores
-    lowerSectionScores = filterForCategories Yahtzee.lowerSectionCategories state.scores
+    upperSectionScores = filterForCategories Y.upperSectionCategories state.scores
+    lowerSectionScores = filterForCategories Y.lowerSectionCategories state.scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
       where
@@ -91,25 +91,25 @@ ui = component { render, eval }
                          then showOption
                          else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust s.value ]
                        ]
-      where showOption = let option = Yahtzee.score s.category (map (\die -> die.value) state.dice)
+      where showOption = let option = Y.score s.category (map (\die -> die.value) state.dice)
                              onclick = E.onClick (E.input_ (ScoreQuery s.category)) 
                          in if isJust option
                             then H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ showJust option ]
                             else H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
-            showJust maybe = show $ fromMaybe 0 maybe
-            showCategory Aces = "Einser"
-            showCategory Twos = "Zweier"
-            showCategory Threes = "Dreier"
-            showCategory Fours = "Vierer"
-            showCategory Fives = "Fünfer"
-            showCategory Sixes = "Sechser"
-            showCategory ThreeOfAKind = "Dreierpasch"
-            showCategory FourOfAKind = "Viererpasch"
-            showCategory FullHouse = "Full House"
-            showCategory SmallStraight = "Kleine Straße"
-            showCategory LargeStraight = "Große Straße"
-            showCategory Yahtzee = "Yahtzee!"
-            showCategory Chance = "Chance"
+            showJust maybe = fromMaybe "-" $ map show maybe
+            showCategory Y.Aces = "Einser"
+            showCategory Y.Twos = "Zweier"
+            showCategory Y.Threes = "Dreier"
+            showCategory Y.Fours = "Vierer"
+            showCategory Y.Fives = "Fünfer"
+            showCategory Y.Sixes = "Sechser"
+            showCategory Y.ThreeOfAKind = "Dreierpasch"
+            showCategory Y.FourOfAKind = "Viererpasch"
+            showCategory Y.FullHouse = "Full House"
+            showCategory Y.SmallStraight = "Kleine Straße"
+            showCategory Y.LargeStraight = "Große Straße"
+            showCategory Y.Yahtzee = "Yahtzee!"
+            showCategory Y.Chance = "Chance"
 
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Roll next) = do
@@ -120,7 +120,7 @@ ui = component { render, eval }
             merge (Tuple die d)         = if die.marked then { marked: false, value: d } else die
 
   eval (MarkDie i next) = do
-    modify (\state -> state { dice = if state.rerolls < maxRerolls then toggleDie i state.dice else state.dice })
+    modify (\state -> state { dice = if state.rerolls < Y.maxRerolls then toggleDie i state.dice else state.dice })
     pure next
       where toggleDie i dice = fromMaybe dice (alterAt i (\die -> Just die { marked = not die.marked }) dice) 
     
@@ -134,10 +134,10 @@ ui = component { render, eval }
                               , rerolls: 0
                               , game: calculation
                               }
-        where calculation = recalculate newScores
+        where calculation = Y.recalculate newScores category (map (_.value) state.dice)
               newScores = map setScore state.scores
               setScore sf = if sf.category == category
-                            then let option = Yahtzee.score category (map (\die -> die.value) state.dice)
+                            then let option = Y.score category (map (\die -> die.value) state.dice)
                                   in if isJust option then sf { value = option } else sf { value = Just 0 }
                             else sf
 
@@ -156,11 +156,12 @@ pipsToDice :: Array Int -> Array Die
 pipsToDice = map (\d -> { marked: false, value: d })
 
 makeInitialState :: Array Int -> State
-makeInitialState ds = let categories = Yahtzee.upperSectionCategories ++ Yahtzee.lowerSectionCategories
+makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectionCategories
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , scores: map (\c -> { category: c, value: Nothing }) categories
-                          , game: { sumUpperSection: 0
+                          , game: { scores: map (\c -> { category: c, value: Nothing }) categories
+                                  , sumUpperSection: 0
                                   , bonusUpperSection: 0
                                   , finalUpperSection: 0
                                   , sumLowerSection: 0
