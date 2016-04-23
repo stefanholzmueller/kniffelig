@@ -160,7 +160,7 @@ makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectio
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , scores: map (\c -> { category: c, value: Nothing }) categories
-                          , game: { scores: map (\c -> { category: c, value: Nothing }) categories
+                          , game: { scores: map (\c -> { category: c, state: Y.NoOption }) categories
                                   , sumUpperSection: 0
                                   , bonusUpperSection: 0
                                   , finalUpperSection: 0

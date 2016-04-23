@@ -27,8 +27,12 @@ instance eqCategory :: Eq Category where
 instance showCategory :: Show Category where
   show = gShow
 
+data ScoreState = Scored (Maybe Int) | Option Int | NoOption
+
 type Score = { category :: Category, value :: Maybe Int }
-type GameState = { scores :: Array Score
+type ScoreField = { category :: Category, state :: ScoreState }
+type ScoreColumn = Array ScoreField
+type GameState = { scores :: ScoreColumn
                  , sumUpperSection :: Int
                  , bonusUpperSection :: Int
                  , finalUpperSection :: Int
@@ -46,7 +50,7 @@ maxRerolls = 2
 
 
 recalculate :: Array Score -> Category -> Array Int -> GameState
-recalculate scores category dice = { scores: scores
+recalculate scores category dice = { scores: scoreColumn
                                    , sumUpperSection: sumUpperSection
                                    , bonusUpperSection: bonusUpperSection
                                    , finalUpperSection: finalUpperSection
@@ -55,6 +59,7 @@ recalculate scores category dice = { scores: scores
                                    , gameOver: gameOver
                                    }
   where
+    scoreColumn = map setScore scores
     gameOver = all (\s -> isJust s.value) scores
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
@@ -65,6 +70,9 @@ recalculate scores category dice = { scores: scores
     upperSectionScores = filterForCategories upperSectionCategories scores
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
+    setScore sf = if sf.category == category
+                  then { category: sf.category, state: Scored (score category dice) }
+                  else { category: sf.category, state: if isJust sf.value then Scored sf.value else NoOption }
 
 
 score :: Category -> Array Int -> Maybe Int
