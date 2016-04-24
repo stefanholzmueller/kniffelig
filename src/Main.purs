@@ -134,10 +134,10 @@ ui = component { render, eval }
                               , rerolls: 0
                               , game: calculation
                               }
-        where calculation = Y.recalculate newScores category (map (_.value) state.dice)
+        where calculation = Y.recalculate newScores ds
               newScores = map setScore state.scores
               setScore sf = if sf.category == category
-                            then let option = Y.score category (map (\die -> die.value) state.dice)
+                            then let option = Y.score category (map (_.value) state.dice)
                                   in if isJust option then sf { value = option } else sf { value = Just 0 }
                             else sf
 
@@ -160,7 +160,7 @@ makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectio
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , scores: map (\c -> { category: c, value: Nothing }) categories
-                          , game: { scores: map (\c -> { category: c, state: Y.NoOption }) categories
+                          , game: { scores: map (\c -> { category: c, state: Y.Undefined }) categories
                                   , sumUpperSection: 0
                                   , bonusUpperSection: 0
                                   , finalUpperSection: 0
