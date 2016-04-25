@@ -27,7 +27,7 @@ instance eqCategory :: Eq Category where
 instance showCategory :: Show Category where
   show = gShow
 
-data ScoreState = Scored (Maybe Int) | Option (Maybe Int) | Undefined
+data ScoreState = Scored (Maybe Int) | Option (Maybe Int)
 
 type Score = { category :: Category, value :: Maybe Int }
 type ScoreField = { category :: Category, state :: ScoreState }

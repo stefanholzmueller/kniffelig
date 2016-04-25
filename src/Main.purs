@@ -77,25 +77,23 @@ ui = component { render, eval }
     rerollsAllowed = state.rerolls < Y.maxRerolls
     rerollsPossible = Y.maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
-    upperSectionScores = filterForCategories Y.upperSectionCategories state.scores
-    lowerSectionScores = filterForCategories Y.lowerSectionCategories state.scores
+    upperSectionScores = filterForCategories Y.upperSectionCategories state.game.scores
+    lowerSectionScores = filterForCategories Y.lowerSectionCategories state.game.scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
       where
       classes = P.classes ([ C.className "die" ] ++ if die.marked then [ C.className "marked" ] else [])
       onclick = E.onClick (E.input_ (MarkDie i))
 
-    renderScoreRow s = H.tr_ [
-                         H.td_ [ H.text (showCategory s.category) ],
-                         if isNothing s.value
-                         then showOption
-                         else H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust s.value ]
-                       ]
-      where showOption = let option = Y.score s.category (map (\die -> die.value) state.dice)
-                             onclick = E.onClick (E.input_ (ScoreQuery s.category)) 
-                         in if isJust option
-                            then H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ showJust option ]
-                            else H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
+    renderScoreRow sf = H.tr_ [
+                          H.td_ [ H.text (showCategory sf.category) ],
+                          case sf.state of
+                               Y.Scored maybe -> H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust maybe ]
+                               Y.Option (Just o) -> H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ show o ]
+
+                               Y.Option Nothing -> H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
+                        ]
+      where onclick = E.onClick (E.input_ (ScoreQuery sf.category))
             showJust maybe = fromMaybe "-" $ map show maybe
             showCategory Y.Aces = "Einser"
             showCategory Y.Twos = "Zweier"
@@ -157,17 +155,11 @@ pipsToDice = map (\d -> { marked: false, value: d })
 
 makeInitialState :: Array Int -> State
 makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectionCategories
+                          calculation = Y.recalculate (map (\c -> {category: c, value: Nothing}) categories) ds
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , scores: map (\c -> { category: c, value: Nothing }) categories
-                          , game: { scores: map (\c -> { category: c, state: Y.Undefined }) categories
-                                  , sumUpperSection: 0
-                                  , bonusUpperSection: 0
-                                  , finalUpperSection: 0
-                                  , sumLowerSection: 0
-                                  , finalSum: 0
-                                  , gameOver: false
-                                  }
+                          , game: calculation
                           }
 
 main :: forall eff. Eff (AppEffects (eff)) Unit
