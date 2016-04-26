@@ -25,7 +25,6 @@ import qualified Yahtzee as Y
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
 type State = { dice :: Array Die
              , rerolls :: Int
-             , scores :: Array Y.Score
              , game :: Y.GameState
              }
 type Die = { marked :: Boolean, value :: Int }
@@ -127,16 +126,14 @@ ui = component { render, eval }
     modify (updateScores ds)
     pure next
       where
-      updateScores ds state = { scores: newScores
-                              , dice: pipsToDice ds
+      updateScores ds state = { dice: pipsToDice ds
                               , rerolls: 0
                               , game: calculation
                               }
         where calculation = Y.recalculate newScores ds
-              newScores = map setScore state.scores
+              newScores = map setScore state.game.scores
               setScore sf = if sf.category == category
-                            then let option = Y.score category (map (_.value) state.dice)
-                                  in if isJust option then sf { value = option } else sf { value = Just 0 }
+                            then { category: category, state: Y.Scored $ Y.score category (map (_.value) state.dice) }
                             else sf
 
   eval (Restart next) = do
@@ -155,10 +152,9 @@ pipsToDice = map (\d -> { marked: false, value: d })
 
 makeInitialState :: Array Int -> State
 makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectionCategories
-                          calculation = Y.recalculate (map (\c -> {category: c, value: Nothing}) categories) ds
+                          calculation = Y.recalculate (map (\c -> {category: c, state: Y.Option Nothing}) categories) ds
                        in { dice: pipsToDice ds
                           , rerolls: 0
-                          , scores: map (\c -> { category: c, value: Nothing }) categories
                           , game: calculation
                           }
 

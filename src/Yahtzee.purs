@@ -28,8 +28,6 @@ instance showCategory :: Show Category where
   show = gShow
 
 data ScoreState = Scored (Maybe Int) | Option (Maybe Int)
-
-type Score = { category :: Category, value :: Maybe Int }
 type ScoreField = { category :: Category, state :: ScoreState }
 type ScoreColumn = Array ScoreField
 type GameState = { scores :: ScoreColumn
@@ -49,8 +47,8 @@ maxRerolls :: Int
 maxRerolls = 2
 
 
-recalculate :: Array Score -> Array Int -> GameState
-recalculate scores dice = { scores: scoreColumn
+recalculate :: Array ScoreField -> Array Int -> GameState
+recalculate scores dice = { scores: newScores
                           , sumUpperSection: sumUpperSection
                           , bonusUpperSection: bonusUpperSection
                           , finalUpperSection: finalUpperSection
@@ -59,16 +57,20 @@ recalculate scores dice = { scores: scoreColumn
                           , gameOver: gameOver
                           }
   where
-    scoreColumn = map convertScore scores
-    convertScore sf = { category: sf.category, state: convertState sf }
-    convertState sf = if isJust sf.value then Scored sf.value else Option (score sf.category dice)
-    gameOver = all (\s -> isJust s.value) scores
+    newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) scores
+    newScore category (Scored m) = Scored m
+    newScore category (Option m) = Option (score category dice)
+    gameOver = all (\sf -> isScored sf.state) scores
+    isScored (Scored _) = true
+    isScored (Option _) = false
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
     sumLowerSection = sumSection lowerSectionScores
     finalSum = finalUpperSection + sumLowerSection
-    sumSection scores = sum $ map (\s -> fromMaybe 0 s.value) scores
+    sumSection scores = sum $ map (\sf -> summableScore sf.state) scores
+    summableScore (Scored (Just s)) = s
+    summableScore _ = 0
     upperSectionScores = filterForCategories upperSectionCategories scores
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
