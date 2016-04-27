@@ -76,8 +76,8 @@ ui = component { render, eval }
     rerollsAllowed = state.rerolls < Y.maxRerolls
     rerollsPossible = Y.maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
-    upperSectionScores = filterForCategories Y.upperSectionCategories state.game.scores
-    lowerSectionScores = filterForCategories Y.lowerSectionCategories state.game.scores
+    upperSectionScores = filterForCategories Y.upperSectionCategories state.game.scoreColumn.scores
+    lowerSectionScores = filterForCategories Y.lowerSectionCategories state.game.scoreColumn.scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
     renderDieWithIndex (Tuple die i) = H.img [ classes, onclick, (P.src ("Dice-" ++ show die.value ++ ".svg")) ]
       where
@@ -133,7 +133,7 @@ ui = component { render, eval }
                               , game: calculation
                               }
         where calculation = Y.recalculate newScores ds
-              newScores = map setScore state.game.scores
+              newScores = map setScore state.game.scoreColumn.scores
               setScore sf = if sf.category == category
                             then { category: category, state: Y.Scored $ Y.score category (map (_.value) state.dice) }
                             else sf

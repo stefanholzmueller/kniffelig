@@ -28,9 +28,14 @@ instance showCategory :: Show Category where
   show = gShow
 
 data ScoreState = Scored (Maybe Int) | Option (Maybe Int)
-type ScoreField = { category :: Category, state :: ScoreState }
-type ScoreColumn = Array ScoreField
-type GameState = { scores :: ScoreColumn
+data ScoreConstraints = Ascending | Descending | NoRerolls
+type ScoreField = { category :: Category
+                  , state :: ScoreState
+                  }
+type ScoreColumn = { scores :: Array ScoreField
+                   , constraints :: Array ScoreConstraints
+                   }
+type GameState = { scoreColumn :: ScoreColumn
                  , sumUpperSection :: Int
                  , bonusUpperSection :: Int
                  , finalUpperSection :: Int
@@ -48,7 +53,7 @@ maxRerolls = 2
 
 
 recalculate :: Array ScoreField -> Array Int -> GameState
-recalculate scores dice = { scores: newScores
+recalculate scores dice = { scoreColumn: { scores: newScores, constraints: [] }
                           , sumUpperSection: sumUpperSection
                           , bonusUpperSection: bonusUpperSection
                           , finalUpperSection: finalUpperSection
