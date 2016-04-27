@@ -29,7 +29,7 @@ type State = { dice :: Array Die
              }
 type Die = { marked :: Boolean, value :: Int }
 
-data Query a = ScoreQuery Y.Category a
+data Query a = Score Y.Category a
 	     | Roll a
              | MarkDie Int a
              | Restart a
@@ -92,7 +92,7 @@ ui = component { render, eval }
 
                                Y.Option Nothing -> H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
                         ]
-      where onclick = E.onClick (E.input_ (ScoreQuery sf.category))
+      where onclick = E.onClick (E.input_ (Score sf.category))
             showJust maybe = fromMaybe "-" $ map show maybe
             showCategory Y.Aces = "Einser"
             showCategory Y.Twos = "Zweier"
@@ -121,7 +121,7 @@ ui = component { render, eval }
     pure next
       where toggleDie i dice = fromMaybe dice (alterAt i (\die -> Just die { marked = not die.marked }) dice) 
     
-  eval (ScoreQuery category next) = do
+  eval (Score category next) = do
     ds <- fromEff randomPips5
     modify (updateScores ds)
     pure next
