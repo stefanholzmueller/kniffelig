@@ -84,6 +84,10 @@ ui = component { render, eval }
       classes = P.classes ([ C.className "die" ] ++ if die.marked then [ C.className "marked" ] else [])
       onclick = E.onClick (E.input_ (MarkDie i))
 
+    columnGetters game = [] 
+                      ++ [ game.sumUpperSection, game.bonusUpperSection, game.finalUpperSection ]
+                      ++ []
+                      ++ [ game.sumLowerSection. game.finalSum ]
     renderScoreRow sf = H.tr_ [
                           H.td_ [ H.text (showCategory sf.category) ],
                           case sf.state of

@@ -80,6 +80,12 @@ recalculate scores dice = { scoreColumn: { scores: newScores, constraints: [] }
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
 
+scoreHardcore :: ScoreColumn -> Int -> Category -> Array Int -> Maybe Int
+scoreHardcore scoreColumn rerolls category dice = if scorable then score category dice else Nothing
+  where scorable = all id (map withConstraint scoreColumn.constraints)
+        withConstraint Ascending = true -- TODO
+        withConstraint Descending = true
+        withConstraint NoRerolls = rerolls == 0
 
 score :: Category -> Array Int -> Maybe Int
 score Aces = scorePips 1
