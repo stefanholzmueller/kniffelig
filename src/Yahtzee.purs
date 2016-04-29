@@ -53,18 +53,21 @@ maxRerolls = 2
 
 
 recalculate :: Array ScoreField -> Array Int -> GameState
-recalculate scores dice = { scoreColumn: { scores: newScores, constraints: [] }
-                          , sumUpperSection: sumUpperSection
-                          , bonusUpperSection: bonusUpperSection
-                          , finalUpperSection: finalUpperSection
-                          , sumLowerSection: sumLowerSection
-                          , finalSum: finalSum
-                          , gameOver: gameOver
-                          }
+recalculate scores dice = recalculate' score scores dice
+
+recalculate' :: (Category -> Array Int -> Maybe Int) -> Array ScoreField -> Array Int -> GameState
+recalculate' scoreFn scores dice = { scoreColumn: { scores: newScores, constraints: [] }
+                                   , sumUpperSection: sumUpperSection
+                                   , bonusUpperSection: bonusUpperSection
+                                   , finalUpperSection: finalUpperSection
+                                   , sumLowerSection: sumLowerSection
+                                   , finalSum: finalSum
+                                   , gameOver: gameOver
+                                   }
   where
     newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) scores
     newScore category (Scored m) = Scored m
-    newScore category (Option m) = Option (score category dice)
+    newScore category (Option m) = Option (scoreFn category dice)
     gameOver = all (\sf -> isScored sf.state) scores
     isScored (Scored _) = true
     isScored (Option _) = false
@@ -79,6 +82,10 @@ recalculate scores dice = { scoreColumn: { scores: newScores, constraints: [] }
     upperSectionScores = filterForCategories upperSectionCategories scores
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
+
+recalculateHardcore :: Array ScoreColumn -> Int -> Array Int -> Array GameState
+recalculateHardcore scoreColumns rerolls dice = map f scoreColumns
+  where f scoreColumn = recalculate' (scoreHardcore scoreColumn rerolls) scoreColumn.scores dice
 
 scoreHardcore :: ScoreColumn -> Int -> Category -> Array Int -> Maybe Int
 scoreHardcore scoreColumn rerolls category dice = if scorable then score category dice else Nothing
