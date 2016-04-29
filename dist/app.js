@@ -6927,18 +6927,18 @@ var PS = { };
       if (!isYahtzee) {
           return Data_Maybe.Nothing.value;
       };
-      throw new Error("Failed pattern match at Yahtzee line 115, column 1 - line 116, column 1: " + [ isYahtzee.constructor.name ]);
+      throw new Error("Failed pattern match at Yahtzee line 133, column 1 - line 134, column 1: " + [ isYahtzee.constructor.name ]);
   };
   var scoreStraight = function (n) {
       return function (dice) {
           var straightStartingFrom = function (die) {
               return Data_Array[".."](die)((die + n | 0) - 1);
           };
-          var points = function (_8) {
-              if (_8 === 4) {
+          var points = function (_9) {
+              if (_9 === 4) {
                   return new Data_Maybe.Just(30);
               };
-              if (_8 === 5) {
+              if (_9 === 5) {
                   return new Data_Maybe.Just(40);
               };
               return Data_Maybe.Nothing.value;
@@ -6954,7 +6954,7 @@ var PS = { };
           if (!isStraight) {
               return Data_Maybe.Nothing.value;
           };
-          throw new Error("Failed pattern match at Yahtzee line 107, column 1 - line 108, column 1: " + [ isStraight.constructor.name ]);
+          throw new Error("Failed pattern match at Yahtzee line 125, column 1 - line 126, column 1: " + [ isStraight.constructor.name ]);
       };
   };
   var scorePips = function (n) {
@@ -6969,14 +6969,14 @@ var PS = { };
           var isOfAKind = Prelude[">>>"](Prelude.semigroupoidFn)(Data_Array["group'"](Prelude.ordInt))(Prelude[">>>"](Prelude.semigroupoidFn)(Prelude.map(Prelude.functorArray)(Data_Array.length))(Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (_2) {
               return _2 >= n;
           })));
-          var _12 = isOfAKind(dice);
-          if (_12) {
+          var _13 = isOfAKind(dice);
+          if (_13) {
               return new Data_Maybe.Just(Data_Foldable.sum(Data_Foldable.foldableArray)(Prelude.semiringInt)(dice));
           };
-          if (!_12) {
+          if (!_13) {
               return Data_Maybe.Nothing.value;
           };
-          throw new Error("Failed pattern match at Yahtzee line 98, column 1 - line 99, column 1: " + [ _12.constructor.name ]);
+          throw new Error("Failed pattern match at Yahtzee line 116, column 1 - line 117, column 1: " + [ _13.constructor.name ]);
       };
   };
   var scoreFullHouse = function (dice) {
@@ -6984,14 +6984,14 @@ var PS = { };
       var isFullHouse = function (dice_1) {
           return Prelude["=="](Prelude.eqArray(Prelude.eqInt))(groupDice(dice_1))([ 2, 3 ]);
       };
-      var _13 = isFullHouse(dice);
-      if (_13) {
+      var _14 = isFullHouse(dice);
+      if (_14) {
           return new Data_Maybe.Just(25);
       };
-      if (!_13) {
+      if (!_14) {
           return Data_Maybe.Nothing.value;
       };
-      throw new Error("Failed pattern match at Yahtzee line 102, column 1 - line 103, column 1: " + [ _13.constructor.name ]);
+      throw new Error("Failed pattern match at Yahtzee line 120, column 1 - line 121, column 1: " + [ _14.constructor.name ]);
   };
   var score = function (_4) {
       if (_4 instanceof Aces) {
@@ -7031,11 +7031,11 @@ var PS = { };
           return scoreYahtzee;
       };
       if (_4 instanceof Chance) {
-          return function (_56) {
-              return Data_Maybe.Just.create(Data_Foldable.sum(Data_Foldable.foldableArray)(Prelude.semiringInt)(_56));
+          return function (_59) {
+              return Data_Maybe.Just.create(Data_Foldable.sum(Data_Foldable.foldableArray)(Prelude.semiringInt)(_59));
           };
       };
-      throw new Error("Failed pattern match at Yahtzee line 79, column 1 - line 80, column 1: " + [ _4.constructor.name ]);
+      throw new Error("Failed pattern match at Yahtzee line 97, column 1 - line 98, column 1: " + [ _4.constructor.name ]);
   };
   var maxRerolls = 2;
   var lowerSectionCategories = [ ThreeOfAKind.value, FourOfAKind.value, FullHouse.value, SmallStraight.value, LargeStraight.value, Yahtzee.value, Chance.value ];
@@ -7164,84 +7164,94 @@ var PS = { };
       throw new Error("Failed pattern match at Yahtzee line 24, column 1 - line 25, column 1: " + [ $dollarx.constructor.name ]);
   });                                                                      
   var eqCategory = new Prelude.Eq(Data_Generic.gEq(genericCategory));
-  var recalculate = function (scores) {
-      return function (dice) {
-          var summableScore = function (_7) {
-              if (_7 instanceof Scored && _7.value0 instanceof Data_Maybe.Just) {
-                  return _7.value0.value0;
-              };
-              return 0;
-          };
-          var sumSection = function (scores_1) {
-              return Data_Foldable.sum(Data_Foldable.foldableArray)(Prelude.semiringInt)(Prelude.map(Prelude.functorArray)(function (sf) {
-                  return summableScore(sf.state);
-              })(scores_1));
-          };
-          var newScore = function (category) {
-              return function (_5) {
-                  if (_5 instanceof Scored) {
-                      return new Scored(_5.value0);
+  var recalculate$prime = function (scoreFn) {
+      return function (scores) {
+          return function (dice) {
+              var summableScore = function (_7) {
+                  if (_7 instanceof Scored && _7.value0 instanceof Data_Maybe.Just) {
+                      return _7.value0.value0;
                   };
-                  if (_5 instanceof Option) {
-                      return new Option(score(category)(dice));
-                  };
-                  throw new Error("Failed pattern match at Yahtzee line 50, column 1 - line 51, column 1: " + [ category.constructor.name, _5.constructor.name ]);
-              };
-          };
-          var newScores = Prelude.map(Prelude.functorArray)(function (sf) {
-              var _50 = {};
-              for (var _51 in sf) {
-                  if (sf.hasOwnProperty(_51)) {
-                      _50[_51] = sf[_51];
-                  };
-              };
-              _50.state = newScore(sf.category)(sf.state);
-              return _50;
-          })(scores);
-          var isScored = function (_6) {
-              if (_6 instanceof Scored) {
-                  return true;
-              };
-              if (_6 instanceof Option) {
-                  return false;
-              };
-              throw new Error("Failed pattern match at Yahtzee line 50, column 1 - line 51, column 1: " + [ _6.constructor.name ]);
-          };
-          var gameOver = Data_Foldable.all(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (sf) {
-              return isScored(sf.state);
-          })(scores);
-          var filterForCategories = function (categories) {
-              return Data_Array.filter(function (sf) {
-                  return Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (_0) {
-                      return Prelude["=="](eqCategory)(_0)(sf.category);
-                  })(categories);
-              });
-          };
-          var lowerSectionScores = filterForCategories(lowerSectionCategories)(scores);
-          var sumLowerSection = sumSection(lowerSectionScores);
-          var upperSectionScores = filterForCategories(upperSectionCategories)(scores);
-          var sumUpperSection = sumSection(upperSectionScores);
-          var bonusUpperSection = (function () {
-              var _55 = sumUpperSection >= 63;
-              if (_55) {
-                  return 35;
-              };
-              if (!_55) {
                   return 0;
               };
-              throw new Error("Failed pattern match at Yahtzee line 50, column 1 - line 51, column 1: " + [ _55.constructor.name ]);
-          })();
-          var finalUpperSection = sumUpperSection + bonusUpperSection | 0;
-          var finalSum = finalUpperSection + sumLowerSection | 0;
-          return {
-              scores: newScores, 
-              sumUpperSection: sumUpperSection, 
-              bonusUpperSection: bonusUpperSection, 
-              finalUpperSection: finalUpperSection, 
-              sumLowerSection: sumLowerSection, 
-              finalSum: finalSum, 
-              gameOver: gameOver
+              var sumSection = function (scores_1) {
+                  return Data_Foldable.sum(Data_Foldable.foldableArray)(Prelude.semiringInt)(Prelude.map(Prelude.functorArray)(function (sf) {
+                      return summableScore(sf.state);
+                  })(scores_1));
+              };
+              var newScore = function (category) {
+                  return function (_5) {
+                      if (_5 instanceof Scored) {
+                          return new Scored(_5.value0);
+                      };
+                      if (_5 instanceof Option) {
+                          return new Option(scoreFn(category)(dice));
+                      };
+                      throw new Error("Failed pattern match at Yahtzee line 58, column 1 - line 59, column 1: " + [ category.constructor.name, _5.constructor.name ]);
+                  };
+              };
+              var newScores = Prelude.map(Prelude.functorArray)(function (sf) {
+                  var _53 = {};
+                  for (var _54 in sf) {
+                      if (sf.hasOwnProperty(_54)) {
+                          _53[_54] = sf[_54];
+                      };
+                  };
+                  _53.state = newScore(sf.category)(sf.state);
+                  return _53;
+              })(scores);
+              var isScored = function (_6) {
+                  if (_6 instanceof Scored) {
+                      return true;
+                  };
+                  if (_6 instanceof Option) {
+                      return false;
+                  };
+                  throw new Error("Failed pattern match at Yahtzee line 58, column 1 - line 59, column 1: " + [ _6.constructor.name ]);
+              };
+              var gameOver = Data_Foldable.all(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (sf) {
+                  return isScored(sf.state);
+              })(scores);
+              var filterForCategories = function (categories) {
+                  return Data_Array.filter(function (sf) {
+                      return Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (_0) {
+                          return Prelude["=="](eqCategory)(_0)(sf.category);
+                      })(categories);
+                  });
+              };
+              var lowerSectionScores = filterForCategories(lowerSectionCategories)(scores);
+              var sumLowerSection = sumSection(lowerSectionScores);
+              var upperSectionScores = filterForCategories(upperSectionCategories)(scores);
+              var sumUpperSection = sumSection(upperSectionScores);
+              var bonusUpperSection = (function () {
+                  var _58 = sumUpperSection >= 63;
+                  if (_58) {
+                      return 35;
+                  };
+                  if (!_58) {
+                      return 0;
+                  };
+                  throw new Error("Failed pattern match at Yahtzee line 58, column 1 - line 59, column 1: " + [ _58.constructor.name ]);
+              })();
+              var finalUpperSection = sumUpperSection + bonusUpperSection | 0;
+              var finalSum = finalUpperSection + sumLowerSection | 0;
+              return {
+                  scoreColumn: {
+                      scores: newScores, 
+                      constraints: [  ]
+                  }, 
+                  sumUpperSection: sumUpperSection, 
+                  bonusUpperSection: bonusUpperSection, 
+                  finalUpperSection: finalUpperSection, 
+                  sumLowerSection: sumLowerSection, 
+                  finalSum: finalSum, 
+                  gameOver: gameOver
+              };
           };
+      };
+  };
+  var recalculate = function (scores) {
+      return function (dice) {
+          return recalculate$prime(score)(scores)(dice);
       };
   };
   exports["Scored"] = Scored;
@@ -7314,14 +7324,14 @@ var PS = { };
       };
       return Score;
   })();
-  var Roll = (function () {
-      function Roll(value0) {
+  var Reroll = (function () {
+      function Reroll(value0) {
           this.value0 = value0;
       };
-      Roll.create = function (value0) {
-          return new Roll(value0);
+      Reroll.create = function (value0) {
+          return new Reroll(value0);
       };
-      return Roll;
+      return Reroll;
   })();
   var MarkDie = (function () {
       function MarkDie(value0, value1) {
@@ -7376,47 +7386,47 @@ var PS = { };
               var showJust = function (maybe) {
                   return Data_Maybe.fromMaybe("-")(Prelude.map(Data_Maybe.functorMaybe)(Prelude.show(Prelude.showInt))(maybe));
               };
-              var showCategory = function (_9) {
-                  if (_9 instanceof Yahtzee.Aces) {
+              var showCategory = function (_10) {
+                  if (_10 instanceof Yahtzee.Aces) {
                       return "Einser";
                   };
-                  if (_9 instanceof Yahtzee.Twos) {
+                  if (_10 instanceof Yahtzee.Twos) {
                       return "Zweier";
                   };
-                  if (_9 instanceof Yahtzee.Threes) {
+                  if (_10 instanceof Yahtzee.Threes) {
                       return "Dreier";
                   };
-                  if (_9 instanceof Yahtzee.Fours) {
+                  if (_10 instanceof Yahtzee.Fours) {
                       return "Vierer";
                   };
-                  if (_9 instanceof Yahtzee.Fives) {
+                  if (_10 instanceof Yahtzee.Fives) {
                       return "F\xfcnfer";
                   };
-                  if (_9 instanceof Yahtzee.Sixes) {
+                  if (_10 instanceof Yahtzee.Sixes) {
                       return "Sechser";
                   };
-                  if (_9 instanceof Yahtzee.ThreeOfAKind) {
+                  if (_10 instanceof Yahtzee.ThreeOfAKind) {
                       return "Dreierpasch";
                   };
-                  if (_9 instanceof Yahtzee.FourOfAKind) {
+                  if (_10 instanceof Yahtzee.FourOfAKind) {
                       return "Viererpasch";
                   };
-                  if (_9 instanceof Yahtzee.FullHouse) {
+                  if (_10 instanceof Yahtzee.FullHouse) {
                       return "Full House";
                   };
-                  if (_9 instanceof Yahtzee.SmallStraight) {
+                  if (_10 instanceof Yahtzee.SmallStraight) {
                       return "Kleine Stra\xdfe";
                   };
-                  if (_9 instanceof Yahtzee.LargeStraight) {
+                  if (_10 instanceof Yahtzee.LargeStraight) {
                       return "Gro\xdfe Stra\xdfe";
                   };
-                  if (_9 instanceof Yahtzee.Yahtzee) {
+                  if (_10 instanceof Yahtzee.Yahtzee) {
                       return "Yahtzee!";
                   };
-                  if (_9 instanceof Yahtzee.Chance) {
+                  if (_10 instanceof Yahtzee.Chance) {
                       return "Chance";
                   };
-                  throw new Error("Failed pattern match at Main line 111, column 3 - line 112, column 3: " + [ _9.constructor.name ]);
+                  throw new Error("Failed pattern match at Main line 115, column 3 - line 116, column 3: " + [ _10.constructor.name ]);
               };
               var onclick = Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(Score.create(sf.category)));
               return Halogen_HTML_Elements.tr_([ Halogen_HTML_Elements.td_([ Halogen_HTML.text(showCategory(sf.category)) ]), (function () {
@@ -7429,51 +7439,54 @@ var PS = { };
                   if (sf.state instanceof Yahtzee.Option && sf.state.value0 instanceof Data_Maybe.Nothing) {
                       return Halogen_HTML_Elements_Indexed.td([ onclick, Halogen_HTML_Properties_Indexed.classes([ Halogen_HTML_Core.className("discard") ]) ])([ Halogen_HTML.text("-") ]);
                   };
-                  throw new Error("Failed pattern match at Main line 111, column 3 - line 112, column 3: " + [ sf.state.constructor.name ]);
+                  throw new Error("Failed pattern match at Main line 115, column 3 - line 116, column 3: " + [ sf.state.constructor.name ]);
               })() ]);
           };
-          var renderDieWithIndex = function (_8) {
-              var onclick = Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(MarkDie.create(_8.value1)));
+          var renderDieWithIndex = function (_9) {
+              var onclick = Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(MarkDie.create(_9.value1)));
               var classes = Halogen_HTML_Properties_Indexed.classes(Prelude["++"](Prelude.semigroupArray)([ Halogen_HTML_Core.className("die") ])((function () {
-                  if (_8.value0.marked) {
+                  if (_9.value0.marked) {
                       return [ Halogen_HTML_Core.className("marked") ];
                   };
-                  if (!_8.value0.marked) {
+                  if (!_9.value0.marked) {
                       return [  ];
                   };
-                  throw new Error("Failed pattern match at Main line 111, column 3 - line 112, column 3: " + [ _8.value0.marked.constructor.name ]);
+                  throw new Error("Failed pattern match at Main line 115, column 3 - line 116, column 3: " + [ _9.value0.marked.constructor.name ]);
               })()));
-              return Halogen_HTML_Elements_Indexed.img([ classes, onclick, Halogen_HTML_Properties_Indexed.src("Dice-" + (Prelude.show(Prelude.showInt)(_8.value0.value) + ".svg")) ]);
+              return Halogen_HTML_Elements_Indexed.img([ classes, onclick, Halogen_HTML_Properties_Indexed.src("Dice-" + (Prelude.show(Prelude.showInt)(_9.value0.value) + ".svg")) ]);
           };
           var filterForCategories = function (categories) {
               return Data_Array.filter(function (sf) {
-                  return Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (_1) {
-                      return Prelude["=="](Yahtzee.eqCategory)(_1)(sf.category);
+                  return Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (_2) {
+                      return Prelude["=="](Yahtzee.eqCategory)(_2)(sf.category);
                   })(categories);
               });
           };
-          var lowerSectionScores = filterForCategories(Yahtzee.lowerSectionCategories)(state.game.scores);
-          var upperSectionScores = filterForCategories(Yahtzee.upperSectionCategories)(state.game.scores);
+          var lowerSectionScores = filterForCategories(Yahtzee.lowerSectionCategories)(state.game.scoreColumn.scores);
+          var upperSectionScores = filterForCategories(Yahtzee.upperSectionCategories)(state.game.scoreColumn.scores);
+          var columnGetters = function (game) {
+              return Prelude["++"](Prelude.semigroupArray)([  ])(Prelude["++"](Prelude.semigroupArray)([ game.sumUpperSection, game.bonusUpperSection, game.finalUpperSection ])(Prelude["++"](Prelude.semigroupArray)([  ])([ game.sumLowerSection.game.finalSum ])));
+          };
           var anyDieMarked = Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (d) {
               return d.marked;
           })(state.dice);
-          return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.div_(Prelude.map(Prelude.functorArray)(renderDieWithIndex)(zipWithIndex(state.dice))), Halogen_HTML_Elements_Indexed.button([ Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(Roll.create)), Halogen_HTML_Properties_Indexed.enabled(rerollsAllowed && anyDieMarked) ])([ Halogen_HTML.text("Markierte W\xfcrfel nochmal werfen") ]), Halogen_HTML_Elements.p_([ Halogen_HTML.text((function () {
+          return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.div_(Prelude.map(Prelude.functorArray)(renderDieWithIndex)(zipWithIndex(state.dice))), Halogen_HTML_Elements_Indexed.button([ Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(Reroll.create)), Halogen_HTML_Properties_Indexed.enabled(rerollsAllowed && anyDieMarked) ])([ Halogen_HTML.text("Markierte W\xfcrfel nochmal werfen") ]), Halogen_HTML_Elements.p_([ Halogen_HTML.text((function () {
               if (rerollsAllowed) {
                   return "Noch " + (Prelude.show(Prelude.showInt)(rerollsPossible) + (" Wiederholungs" + ((function () {
-                      var _22 = rerollsPossible === 1;
-                      if (_22) {
+                      var _23 = rerollsPossible === 1;
+                      if (_23) {
                           return "wurf";
                       };
-                      if (!_22) {
+                      if (!_23) {
                           return "w\xfcrfe";
                       };
-                      throw new Error("Failed pattern match: " + [ _22.constructor.name ]);
+                      throw new Error("Failed pattern match: " + [ _23.constructor.name ]);
                   })() + " m\xf6glich")));
               };
               if (!rerollsAllowed) {
                   return "Alle W\xfcrfe sind aufgebraucht - eine Kategorie werten oder streichen!";
               };
-              throw new Error("Failed pattern match at Main line 111, column 3 - line 112, column 3: " + [ rerollsAllowed.constructor.name ]);
+              throw new Error("Failed pattern match at Main line 115, column 3 - line 116, column 3: " + [ rerollsAllowed.constructor.name ]);
           })()) ]), Halogen_HTML_Elements.table_([ Halogen_HTML_Elements.tbody_(Prelude["++"](Prelude.semigroupArray)(Prelude.map(Prelude.functorArray)(renderScoreRow)(upperSectionScores))(Prelude["++"](Prelude.semigroupArray)([ Halogen_HTML_Elements.tr_([ Halogen_HTML_Elements.td_([ Halogen_HTML.text("Zwischensumme") ]), Halogen_HTML_Elements.td_([ Halogen_HTML.text(Prelude.show(Prelude.showInt)(state.game.sumUpperSection)) ]) ]) ])(Prelude["++"](Prelude.semigroupArray)([ Halogen_HTML_Elements.tr_([ Halogen_HTML_Elements.td_([ Halogen_HTML.text("Bonus") ]), Halogen_HTML_Elements.td_([ Halogen_HTML.text(Prelude.show(Prelude.showInt)(state.game.bonusUpperSection)) ]) ]) ])(Prelude["++"](Prelude.semigroupArray)([ Halogen_HTML_Elements.tr_([ Halogen_HTML_Elements.td_([ Halogen_HTML.text("Zwischensumme oberer Teil") ]), Halogen_HTML_Elements.td_([ Halogen_HTML.text(Prelude.show(Prelude.showInt)(state.game.finalUpperSection)) ]) ]) ])(Prelude["++"](Prelude.semigroupArray)(Prelude.map(Prelude.functorArray)(renderScoreRow)(lowerSectionScores))(Prelude["++"](Prelude.semigroupArray)([ Halogen_HTML_Elements.tr_([ Halogen_HTML_Elements.td_([ Halogen_HTML.text("Zwischensumme unterer Teil") ]), Halogen_HTML_Elements.td_([ Halogen_HTML.text(Prelude.show(Prelude.showInt)(state.game.sumLowerSection)) ]) ]) ])([ Halogen_HTML_Elements.tr_([ Halogen_HTML_Elements.td_([ Halogen_HTML.text("Endsumme") ]), Halogen_HTML_Elements.td_([ Halogen_HTML.text(Prelude.show(Prelude.showInt)(state.game.finalSum)) ]) ]) ]))))))) ]), Halogen_HTML_Elements.p_((function () {
               if (state.game.gameOver) {
                   return [ Halogen_HTML_Elements_Indexed.button([ Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(Restart.create)) ])([ Halogen_HTML.text("Neues Spiel") ]) ];
@@ -7481,102 +7494,103 @@ var PS = { };
               if (!state.game.gameOver) {
                   return [  ];
               };
-              throw new Error("Failed pattern match at Main line 111, column 3 - line 112, column 3: " + [ state.game.gameOver.constructor.name ]);
+              throw new Error("Failed pattern match at Main line 115, column 3 - line 116, column 3: " + [ state.game.gameOver.constructor.name ]);
           })()) ]);
       };
-      var $$eval = function (_7) {
-          if (_7 instanceof Roll) {
-              var merge = function (_10) {
-                  if (_10.value0.marked) {
-                      return {
-                          marked: false, 
-                          value: _10.value1
-                      };
-                  };
-                  if (!_10.value0.marked) {
-                      return _10.value0;
-                  };
-                  throw new Error("Failed pattern match at Main line 116, column 13 - line 117, column 13: " + [ _10.value0.marked.constructor.name ]);
-              };
-              var rerollMarkedDice = function (oldDice) {
-                  return function (ds) {
-                      return Prelude.map(Prelude.functorArray)(merge)(Data_Array.zip(oldDice)(ds));
-                  };
-              };
-              return Prelude.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(randomPips5))(function (_2) {
+      var $$eval = function (_8) {
+          if (_8 instanceof Reroll) {
+              return Prelude.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(randomPips5))(function (_3) {
                   return Prelude.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (state) {
-                      var _30 = {};
-                      for (var _31 in state) {
-                          if (state.hasOwnProperty(_31)) {
-                              _30[_31] = state[_31];
+                      var merge = function (_11) {
+                          if (_11.value0.marked) {
+                              return {
+                                  marked: false, 
+                                  value: _11.value1
+                              };
+                          };
+                          if (!_11.value0.marked) {
+                              return _11.value0;
+                          };
+                          throw new Error("Failed pattern match at Main line 118, column 27 - line 119, column 27: " + [ _11.value0.marked.constructor.name ]);
+                      };
+                      var newDice = Prelude.map(Prelude.functorArray)(merge)(Data_Array.zip(state.dice)(_3));
+                      var newDs = Prelude.map(Prelude.functorArray)(function (_0) {
+                          return _0.value;
+                      })(newDice);
+                      var calculation = Yahtzee.recalculate(state.game.scoreColumn.scores)(newDs);
+                      var _31 = {};
+                      for (var _32 in state) {
+                          if (state.hasOwnProperty(_32)) {
+                              _31[_32] = state[_32];
                           };
                       };
-                      _30.dice = rerollMarkedDice(state.dice)(_2);
-                      _30.rerolls = state.rerolls + 1 | 0;
-                      return _30;
+                      _31.dice = newDice;
+                      _31.game = calculation;
+                      _31.rerolls = state.rerolls + 1 | 0;
+                      return _31;
                   }))(function () {
-                      return Prelude.pure(Control_Monad_Free.freeApplicative)(_7.value0);
+                      return Prelude.pure(Control_Monad_Free.freeApplicative)(_8.value0);
                   });
               });
           };
-          if (_7 instanceof MarkDie) {
+          if (_8 instanceof MarkDie) {
               var toggleDie = function (i_1) {
                   return function (dice) {
                       return Data_Maybe.fromMaybe(dice)(Data_Array.alterAt(i_1)(function (die) {
                           return new Data_Maybe.Just((function () {
-                              var _33 = {};
-                              for (var _34 in die) {
-                                  if (die.hasOwnProperty(_34)) {
-                                      _33[_34] = die[_34];
+                              var _34 = {};
+                              for (var _35 in die) {
+                                  if (die.hasOwnProperty(_35)) {
+                                      _34[_35] = die[_35];
                                   };
                               };
-                              _33.marked = !die.marked;
-                              return _33;
+                              _34.marked = !die.marked;
+                              return _34;
                           })());
                       })(dice));
                   };
               };
               return Prelude.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (state) {
-                  var _36 = {};
-                  for (var _37 in state) {
-                      if (state.hasOwnProperty(_37)) {
-                          _36[_37] = state[_37];
+                  var _37 = {};
+                  for (var _38 in state) {
+                      if (state.hasOwnProperty(_38)) {
+                          _37[_38] = state[_38];
                       };
                   };
-                  _36.dice = (function () {
-                      var _35 = state.rerolls < Yahtzee.maxRerolls;
-                      if (_35) {
-                          return toggleDie(_7.value0)(state.dice);
+                  _37.dice = (function () {
+                      var _36 = state.rerolls < Yahtzee.maxRerolls;
+                      if (_36) {
+                          return toggleDie(_8.value0)(state.dice);
                       };
-                      if (!_35) {
+                      if (!_36) {
                           return state.dice;
                       };
-                      throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _35.constructor.name ]);
+                      throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _36.constructor.name ]);
                   })();
-                  return _36;
+                  return _37;
               }))(function () {
-                  return Prelude.pure(Control_Monad_Free.freeApplicative)(_7.value1);
+                  return Prelude.pure(Control_Monad_Free.freeApplicative)(_8.value1);
               });
           };
-          if (_7 instanceof Score) {
+          if (_8 instanceof Score) {
               var updateScores = function (ds) {
                   return function (state) {
                       var setScore = function (sf) {
-                          var _40 = Prelude["=="](Yahtzee.eqCategory)(sf.category)(_7.value0);
-                          if (_40) {
+                          var _41 = Prelude["=="](Yahtzee.eqCategory)(sf.category)(_8.value0);
+                          if (_41) {
                               return {
-                                  category: _7.value0, 
-                                  state: Yahtzee.Scored.create(Yahtzee.score(_7.value0)(Prelude.map(Prelude.functorArray)(function (_0) {
-                                      return _0.value;
+                                  category: _8.value0, 
+                                  state: Yahtzee.Scored.create(Yahtzee.score(_8.value0)(Prelude.map(Prelude.functorArray)(function (_1) {
+                                      return _1.value;
                                   })(state.dice)))
                               };
                           };
-                          if (!_40) {
+                          if (!_41) {
                               return sf;
                           };
-                          throw new Error("Failed pattern match at Main line 133, column 15 - line 134, column 15: " + [ _40.constructor.name ]);
+                          throw new Error("Failed pattern match at Main line 139, column 15 - line 140, column 15: " + [ _41.constructor.name ]);
                       };
-                      var newScores = Prelude.map(Prelude.functorArray)(setScore)(state.game.scores);
+                      var newScores = Prelude.map(Prelude.functorArray)(setScore)(state.game.scoreColumn.scores);
                       var calculation = Yahtzee.recalculate(newScores)(ds);
                       return {
                           dice: pipsToDice(ds), 
@@ -7585,36 +7599,36 @@ var PS = { };
                       };
                   };
               };
-              return Prelude.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(randomPips5))(function (_3) {
-                  return Prelude.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(updateScores(_3)))(function () {
-                      return Prelude.pure(Control_Monad_Free.freeApplicative)(_7.value1);
-                  });
-              });
-          };
-          if (_7 instanceof Restart) {
               return Prelude.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(randomPips5))(function (_4) {
-                  return Prelude.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (state) {
-                      return makeInitialState(_4);
-                  }))(function () {
-                      return Prelude.pure(Control_Monad_Free.freeApplicative)(_7.value0);
+                  return Prelude.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(updateScores(_4)))(function () {
+                      return Prelude.pure(Control_Monad_Free.freeApplicative)(_8.value1);
                   });
               });
           };
-          throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _7.constructor.name ]);
+          if (_8 instanceof Restart) {
+              return Prelude.bind(Control_Monad_Free.freeBind)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableFree(Halogen_Query_HalogenF.affableHalogenF(Control_Monad_Aff_Free.affableAff)))(randomPips5))(function (_5) {
+                  return Prelude.bind(Control_Monad_Free.freeBind)(Halogen_Query.modify(function (state) {
+                      return makeInitialState(_5);
+                  }))(function () {
+                      return Prelude.pure(Control_Monad_Free.freeApplicative)(_8.value0);
+                  });
+              });
+          };
+          throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _8.constructor.name ]);
       };
       return Halogen_Component.component({
           render: render, 
           "eval": $$eval
       });
   })();
-  var main = Halogen_Util.runHalogenAff(Prelude.bind(Control_Monad_Aff.bindAff)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableAff)(randomPips5))(function (_6) {
-      var initialState = makeInitialState(_6);
-      return Prelude.bind(Control_Monad_Aff.bindAff)(Halogen_Util.awaitBody)(function (_5) {
-          return Halogen_Driver.runUI(ui)(initialState)(_5);
+  var main = Halogen_Util.runHalogenAff(Prelude.bind(Control_Monad_Aff.bindAff)(Control_Monad_Aff_Free.fromEff(Control_Monad_Aff_Free.affableAff)(randomPips5))(function (_7) {
+      var initialState = makeInitialState(_7);
+      return Prelude.bind(Control_Monad_Aff.bindAff)(Halogen_Util.awaitBody)(function (_6) {
+          return Halogen_Driver.runUI(ui)(initialState)(_6);
       });
   }));
   exports["Score"] = Score;
-  exports["Roll"] = Roll;
+  exports["Reroll"] = Reroll;
   exports["MarkDie"] = MarkDie;
   exports["Restart"] = Restart;
   exports["main"] = main;
