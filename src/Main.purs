@@ -30,7 +30,7 @@ type State = { dice :: Array Die
 type Die = { marked :: Boolean, value :: Int }
 
 data Query a = Score Y.Category a
-	     | Roll a
+	     | Reroll a
              | MarkDie Int a
              | Restart a
 
@@ -41,7 +41,7 @@ ui = component { render, eval }
   render state =
     H.div_ [
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
-      H.button [ E.onClick (E.input_ Roll), P.enabled (rerollsAllowed && anyDieMarked) ] [ H.text "Markierte Würfel nochmal werfen" ],
+      H.button [ E.onClick (E.input_ Reroll), P.enabled (rerollsAllowed && anyDieMarked) ] [ H.text "Markierte Würfel nochmal werfen" ],
       H.p_ [ H.text if rerollsAllowed
                     then "Noch " ++ show rerollsPossible ++ " Wiederholungs" ++ (if rerollsPossible == 1 then "wurf" else "würfe") ++ " möglich"
                     else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
@@ -109,7 +109,7 @@ ui = component { render, eval }
             showCategory Y.Chance = "Chance"
 
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
-  eval (Roll next) = do
+  eval (Reroll next) = do
     ds <- fromEff randomPips5
     modify (\state -> state { dice = rerollMarkedDice state.dice ds, rerolls = state.rerolls + 1 })
     pure next
