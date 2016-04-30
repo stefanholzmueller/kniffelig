@@ -111,10 +111,12 @@ ui = component { render, eval }
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Reroll next) = do
     ds <- fromEff randomPips5
-    modify (\state -> state { dice = rerollMarkedDice state.dice ds, rerolls = state.rerolls + 1 })
+    modify (\state -> let calculation = Y.recalculate state.game.scoreColumn.scores newDs
+                          newDice = map merge (zip state.dice ds)
+                          newDs = map (_.value) newDice
+                          merge (Tuple die d) = if die.marked then { marked: false, value: d } else die
+                      in state { dice = newDice, game = calculation, rerolls = state.rerolls + 1 })
     pure next
-      where rerollMarkedDice oldDice ds = map merge (zip oldDice ds)
-            merge (Tuple die d)         = if die.marked then { marked: false, value: d } else die
 
   eval (MarkDie i next) = do
     modify (\state -> state { dice = if state.rerolls < Y.maxRerolls then toggleDie i state.dice else state.dice })
