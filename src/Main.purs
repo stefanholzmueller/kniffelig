@@ -7,6 +7,7 @@ import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, filter, length, range, replicate, zip)
+import Data.Either (Either(Left, Right))
 import Data.Foldable (any, find)
 import Data.Maybe
 import Data.Traversable (sequence)
@@ -77,13 +78,13 @@ ui = component { render, eval }
     scoreRow label category = H.tr_ [
                                 H.td_ [ H.text label ],
          case scoreState of
-           Y.Scored maybe ->    H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust maybe ]
-           Y.Option (Just o) -> H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ show o ]
-           Y.Option Nothing ->  H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
+           Right maybe ->    H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust maybe ]
+           Left (Just o) -> H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ show o ]
+           Left Nothing ->  H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
                               ]
       where onclick = E.onClick (E.input_ (Score category))
             showJust maybe = fromMaybe "-" $ map show maybe
-            scoreState = fromMaybe (Y.Option Nothing) $ map (_.state) $ maybeFind
+            scoreState = fromMaybe (Left Nothing) $ map (_.state) $ maybeFind
             maybeFind = find (\sf -> sf.category == category) state.game.scoreColumn.scores
     rerollsAllowed = state.rerolls < Y.maxRerolls
     rerollsPossible = Y.maxRerolls - state.rerolls
@@ -123,7 +124,7 @@ ui = component { render, eval }
         where calculation = Y.recalculate newScores ds
               newScores = map setScore state.game.scoreColumn.scores
               setScore sf = if sf.category == category
-                            then { category: category, state: Y.Scored $ Y.score category (map (_.value) state.dice) }
+                            then { category: category, state: Right $ Y.score category (map (_.value) state.dice) }
                             else sf
 
   eval (Restart next) = do
@@ -142,7 +143,7 @@ pipsToDice = map (\d -> { marked: false, value: d })
 
 makeInitialState :: Array Int -> State
 makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectionCategories
-                          calculation = Y.recalculate (map (\c -> {category: c, state: Y.Option Nothing}) categories) ds
+                          calculation = Y.recalculate (map (\c -> {category: c, state: Left Nothing}) categories) ds
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , game: calculation

@@ -2,6 +2,7 @@ module Yahtzee where
 
 import Prelude
 import Data.Array
+import Data.Either (Either(Left, Right), either, isRight)
 import Data.Foldable
 import Data.Generic
 import Data.Maybe
@@ -27,8 +28,8 @@ instance eqCategory :: Eq Category where
 instance showCategory :: Show Category where
   show = gShow
 
-data ScoreState = Scored (Maybe Int) | Option (Maybe Int)
 data ScoreConstraints = Descending | Ascending | NoRerolls
+type ScoreState = Either (Maybe Int) (Maybe Int)
 type ScoreField = { category :: Category
                   , state :: ScoreState
                   }
@@ -43,10 +44,6 @@ type GameState = { scoreColumn :: ScoreColumn
                  , finalSum :: Int
                  , gameOver :: Boolean
                  } 
-
-isScored :: ScoreState -> Boolean
-isScored (Scored _) = true
-isScored (Option _) = false
 
 upperSectionCategories :: Array Category
 upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
@@ -69,18 +66,16 @@ recalculate' scoreFn scores dice = { scoreColumn: { scores: newScores, constrain
                                    , gameOver: gameOver
                                    }
   where
-    newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) scores
-    newScore category (Scored m) = Scored m
-    newScore category (Option m) = Option (scoreFn category dice)
-    gameOver = all (\sf -> isScored sf.state) scores
+    newScores = map (\sf -> sf { state = newScore sf.category sf.state }) scores
+    newScore category = either (const (Left (scoreFn category dice))) Right
+    gameOver = all (\sf -> isRight sf.state) scores
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
     sumLowerSection = sumSection lowerSectionScores
     finalSum = finalUpperSection + sumLowerSection
     sumSection scores = sum $ map (\sf -> summableScore sf.state) scores
-    summableScore (Scored (Just s)) = s
-    summableScore _ = 0
+    summableScore = either (const 0) (fromMaybe 0)
     upperSectionScores = filterForCategories upperSectionCategories scores
     lowerSectionScores = filterForCategories lowerSectionCategories scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
@@ -95,7 +90,7 @@ scoreHardcore scoreColumn rerolls category dice = if scorable then score categor
         withConstraint NoRerolls = rerolls == 0
         withConstraint Descending = isContinuous $ scoreColumn.scores
         withConstraint Ascending = isContinuous $ reverse scoreColumn.scores
-        isContinuous scores = all isScored $ map (_.state) $ takeWhile (\sf -> sf.category /= category) scores
+        isContinuous scores = all isRight $ map (_.state) $ takeWhile (\sf -> sf.category /= category) scores
 
 score :: Category -> Array Int -> Maybe Int
 score Aces = scorePips 1
