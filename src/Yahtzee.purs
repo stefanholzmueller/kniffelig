@@ -28,7 +28,7 @@ instance showCategory :: Show Category where
   show = gShow
 
 data ScoreState = Scored (Maybe Int) | Option (Maybe Int)
-data ScoreConstraints = Ascending | Descending | NoRerolls
+data ScoreConstraints = Descending | Ascending | NoRerolls
 type ScoreField = { category :: Category
                   , state :: ScoreState
                   }
@@ -43,6 +43,10 @@ type GameState = { scoreColumn :: ScoreColumn
                  , finalSum :: Int
                  , gameOver :: Boolean
                  } 
+
+isScored :: ScoreState -> Boolean
+isScored (Scored _) = true
+isScored (Option _) = false
 
 upperSectionCategories :: Array Category
 upperSectionCategories = [ Aces, Twos, Threes, Fours, Fives, Sixes ]
@@ -69,8 +73,6 @@ recalculate' scoreFn scores dice = { scoreColumn: { scores: newScores, constrain
     newScore category (Scored m) = Scored m
     newScore category (Option m) = Option (scoreFn category dice)
     gameOver = all (\sf -> isScored sf.state) scores
-    isScored (Scored _) = true
-    isScored (Option _) = false
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
@@ -90,9 +92,10 @@ recalculateHardcore scoreColumns rerolls dice = map f scoreColumns
 scoreHardcore :: ScoreColumn -> Int -> Category -> Array Int -> Maybe Int
 scoreHardcore scoreColumn rerolls category dice = if scorable then score category dice else Nothing
   where scorable = all id (map withConstraint scoreColumn.constraints)
-        withConstraint Ascending = true -- TODO
-        withConstraint Descending = true
         withConstraint NoRerolls = rerolls == 0
+        withConstraint Descending = isContinuous $ scoreColumn.scores
+        withConstraint Ascending = isContinuous $ reverse scoreColumn.scores
+        isContinuous scores = all isScored $ map (_.state) $ takeWhile (\sf -> sf.category /= category) scores
 
 score :: Category -> Array Int -> Maybe Int
 score Aces = scorePips 1
