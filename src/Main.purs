@@ -99,7 +99,7 @@ ui = component { render, eval }
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Reroll next) = do
     ds <- fromEff randomPips5
-    modify (\state -> let calculation = Y.recalculate state.game.scoreColumn.scores newDs
+    modify (\state -> let calculation = Y.recalculate state.game.scoreColumn newDs
                           newDice = map merge (zip state.dice ds)
                           newDs = map (_.value) newDice
                           merge (Tuple die d) = if die.marked then { marked: false, value: d } else die
@@ -120,7 +120,8 @@ ui = component { render, eval }
                               , rerolls: 0
                               , game: calculation
                               }
-        where calculation = Y.recalculate newScores ds
+        where calculation = Y.recalculate newScoreColumn ds
+              newScoreColumn = state.game.scoreColumn { scores = newScores }
               newScores = map setScore state.game.scoreColumn.scores
               setScore sf = if sf.category == category
                             then { category: category, state: Y.Scored $ Y.score category (map (_.value) state.dice) }
@@ -142,7 +143,9 @@ pipsToDice = map (\d -> { marked: false, value: d })
 
 makeInitialState :: Array Int -> State
 makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectionCategories
-                          calculation = Y.recalculate (map (\c -> {category: c, state: Y.Option Nothing}) categories) ds
+                          initialScores = map (\c -> {category: c, state: Y.Option Nothing}) categories
+                          initialScoreColumn = { constraints: [], scores: initialScores }
+                          calculation = Y.recalculate initialScoreColumn ds
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , game: calculation

@@ -56,23 +56,23 @@ maxRerolls :: Int
 maxRerolls = 2
 
 
-recalculate :: Array ScoreField -> Array Int -> GameState
-recalculate scores dice = recalculate' score scores dice
+recalculate :: ScoreColumn -> Array Int -> GameState
+recalculate scoreColumn dice = recalculate' score scoreColumn dice
 
-recalculate' :: (Category -> Array Int -> Maybe Int) -> Array ScoreField -> Array Int -> GameState
-recalculate' scoreFn scores dice = { scoreColumn: { scores: newScores, constraints: [] }
-                                   , sumUpperSection: sumUpperSection
-                                   , bonusUpperSection: bonusUpperSection
-                                   , finalUpperSection: finalUpperSection
-                                   , sumLowerSection: sumLowerSection
-                                   , finalSum: finalSum
-                                   , gameOver: gameOver
-                                   }
+recalculate' :: (Category -> Array Int -> Maybe Int) -> ScoreColumn -> Array Int -> GameState
+recalculate' scoreFn scoreColumn dice = { scoreColumn: { scores: newScores, constraints: [] }
+                                        , sumUpperSection: sumUpperSection
+                                        , bonusUpperSection: bonusUpperSection
+                                        , finalUpperSection: finalUpperSection
+                                        , sumLowerSection: sumLowerSection
+                                        , finalSum: finalSum
+                                        , gameOver: gameOver
+                                        }
   where
-    newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) scores
+    newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) scoreColumn.scores
     newScore category (Scored m) = Scored m
     newScore category (Option m) = Option (scoreFn category dice)
-    gameOver = all (\sf -> isScored sf.state) scores
+    gameOver = all (\sf -> isScored sf.state) scoreColumn.scores
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
@@ -81,13 +81,13 @@ recalculate' scoreFn scores dice = { scoreColumn: { scores: newScores, constrain
     sumSection scores = sum $ map (\sf -> summableScore sf.state) scores
     summableScore (Scored (Just s)) = s
     summableScore _ = 0
-    upperSectionScores = filterForCategories upperSectionCategories scores
-    lowerSectionScores = filterForCategories lowerSectionCategories scores
+    upperSectionScores = filterForCategories upperSectionCategories scoreColumn.scores
+    lowerSectionScores = filterForCategories lowerSectionCategories scoreColumn.scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
 
 recalculateHardcore :: Array ScoreColumn -> Int -> Array Int -> Array GameState
 recalculateHardcore scoreColumns rerolls dice = map f scoreColumns
-  where f scoreColumn = recalculate' (scoreHardcore scoreColumn rerolls) scoreColumn.scores dice
+  where f scoreColumn = recalculate' (scoreHardcore scoreColumn rerolls) scoreColumn dice
 
 scoreHardcore :: ScoreColumn -> Int -> Category -> Array Int -> Maybe Int
 scoreHardcore scoreColumn rerolls category dice = if scorable then score category dice else Nothing
