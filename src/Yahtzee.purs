@@ -28,12 +28,17 @@ instance showCategory :: Show Category where
   show = gShow
 
 data ScoreState = Scored (Maybe Int) | Option (Maybe Int)
-data ScoreConstraints = Descending | Ascending | NoRerolls
+data ScoreConstraint = Descending | Ascending | NoRerolls
+
+derive instance genericScoreConstraint :: Generic ScoreConstraint
+instance eqScoreConstraint :: Eq ScoreConstraint where
+  eq = gEq
+
 type ScoreField = { category :: Category
                   , state :: ScoreState
                   }
 type ScoreColumn = { scores :: Array ScoreField
-                   , constraints :: Array ScoreConstraints
+                   , constraints :: Array ScoreConstraint
                    }
 type GameState = { scoreColumn :: ScoreColumn
                  , sumUpperSection :: Int
@@ -41,8 +46,8 @@ type GameState = { scoreColumn :: ScoreColumn
                  , finalUpperSection :: Int
                  , sumLowerSection :: Int
                  , finalSum :: Int
-                 , gameOver :: Boolean
-                 } 
+                 , gameOver :: Boolean -- TODO
+                 }
 
 isScored :: ScoreState -> Boolean
 isScored (Scored _) = true
@@ -60,7 +65,7 @@ recalculate :: ScoreColumn -> Array Int -> GameState
 recalculate scoreColumn dice = recalculate' score scoreColumn dice
 
 recalculate' :: (Category -> Array Int -> Maybe Int) -> ScoreColumn -> Array Int -> GameState
-recalculate' scoreFn scoreColumn dice = { scoreColumn: { scores: newScores, constraints: [] }
+recalculate' scoreFn scoreColumn dice = { scoreColumn: { scores: newScores, constraints: scoreColumn.constraints }
                                         , sumUpperSection: sumUpperSection
                                         , bonusUpperSection: bonusUpperSection
                                         , finalUpperSection: finalUpperSection
