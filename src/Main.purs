@@ -7,8 +7,9 @@ import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, length, range, replicate, zip)
-import Data.Foldable (all, any, find)
+import Data.Foldable (all, any, find, sum)
 import Data.Maybe
+import Data.String (joinWith)
 import Data.Traversable (sequence)
 import Data.Tuple
 
@@ -47,7 +48,8 @@ ui = component { render, eval }
                     else "Alle Würfe sind aufgebraucht - eine Kategorie werten oder streichen!"
       ],
       H.table_ [
-        H.tbody_ $ [ scoreRow "Einser" Y.Aces
+        H.tbody_ $ [ constraintsRow
+                   , scoreRow "Einser" Y.Aces
                    , scoreRow "Zweier" Y.Twos
                    , scoreRow "Dreier" Y.Threes
                    , scoreRow "Vierer" Y.Fours
@@ -65,12 +67,22 @@ ui = component { render, eval }
                    , scoreRow "Chance" Y.Chance
                    , calculatedRow "Zwischensumme unterer Teil" (_.sumLowerSection)
                    , calculatedRow "Endsumme" (_.finalSum)
+                   , finalRow
                    ]
       ],
       H.p_ if gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
     ]
     where
-    gameOver = all (_.gameOver) state.games
+    showConstraint Y.NoRerolls = "1"
+    showConstraint Y.Ascending = "^"
+    showConstraint Y.Descending = "v"
+    finalRow = H.tr_ [ H.td_ [ H.text "Gesamtsumme" ]
+                     , H.td [ P.colSpan 6 ] [ H.text $ show $ sum $ map (_.finalSum) state.games ]
+                     ]
+    constraintsRow = H.tr_ ([
+                       H.td_ []
+                     ] ++ map (\game -> renderConstraints game.scoreColumn.constraints) state.games)
+      where renderConstraints constraints = H.td_ [ H.text $ joinWith "" $ map showConstraint constraints ]
     calculatedRow label getter = H.tr_ ([
                                    H.td_ [ H.text label ]
                                  ] ++ map (\game -> H.td_ [ H.text $ show $ getter game ]) state.games)
@@ -85,6 +97,7 @@ ui = component { render, eval }
               Y.Scored maybe ->    H.td [ P.classes [ C.className "scored" ] ] [ H.text $ showJust maybe ]
               Y.Option (Just o) -> H.td [ onclick, P.classes [ C.className "option" ] ] [ H.text $ show o ]
               Y.Option Nothing ->  H.td [ onclick, P.classes [ C.className "discard" ] ] [ H.text "-" ]
+    gameOver = all (_.gameOver) state.games
     rerollsAllowed = state.rerolls < Y.maxRerolls
     rerollsPossible = Y.maxRerolls - state.rerolls
     anyDieMarked = any (\d -> d.marked) state.dice
@@ -121,6 +134,7 @@ ui = component { render, eval }
                               }
         where calculation = Y.recalculateHardcore newScoreColumns 0 ds
               newScoreColumns = map (\g -> if g.scoreColumn.constraints == game.scoreColumn.constraints
+                                           -- assuming constraints are unique for all games
                                            then newScoreColumn
                                            else g.scoreColumn) state.games
               newScoreColumn = game.scoreColumn { scores = newScores }
