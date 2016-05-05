@@ -70,12 +70,16 @@ ui = component { render, eval }
                    , finalRow
                    ]
       ],
+      H.p_ [ legend Y.Descending, H.br_, legend Y.Ascending, H.br_, legend Y.NoRerolls ],
       H.p_ if gameOver then [ H.button [ E.onClick (E.input_ Restart) ] [ H.text "Neues Spiel" ] ] else []
     ]
     where
     showConstraint Y.NoRerolls = "1"
     showConstraint Y.Ascending = "^"
     showConstraint Y.Descending = "v"
+    legend Y.NoRerolls = H.text $ showConstraint Y.NoRerolls ++ " = keine Wiederholungswürfe erlaubt"
+    legend Y.Ascending = H.text $ showConstraint Y.Ascending ++ " = muss von unten nach oben gewertet werden"
+    legend Y.Descending = H.text $ showConstraint Y.Descending ++ " = muss von oben nach unten gewertet werden"
     finalRow = H.tr_ [ H.td_ [ H.text "Gesamtsumme" ]
                      , H.td [ P.colSpan 6 ] [ H.text $ show $ sum $ map (_.finalSum) state.games ]
                      ]
