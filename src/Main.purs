@@ -137,11 +137,11 @@ ui = component { render, eval }
                               }
         where calculation = Y.recalculateHardcore newGames 0 ds
               newGames = map (\g -> if g.constraints == game.constraints then newGame else g) state.games
-                                           -- assuming constraints are unique for all games
+                                    -- assuming constraints are unique for all games
               newGame = game { scores = newScores }
               newScores = map setScore game.scores
               setScore sf = if sf.category == category
-                            then { category: category, state: Y.Scored $ Y.score category (map (_.value) state.dice) }
+                            then { category, state: Y.Scored $ Y.scoreHardcore game state.rerolls category (map (_.value) state.dice) }
                             else sf
 
   eval (Restart next) = do
