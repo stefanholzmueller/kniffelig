@@ -37,10 +37,8 @@ instance eqScoreConstraint :: Eq ScoreConstraint where
 type ScoreField = { category :: Category
                   , state :: ScoreState
                   }
-type ScoreColumn = { scores :: Array ScoreField
-                   , constraints :: Array ScoreConstraint
-                   }
-type GameState = { scoreColumn :: ScoreColumn
+type GameState = { scores :: Array ScoreField
+                 , constraints :: Array ScoreConstraint
                  , sumUpperSection :: Int
                  , bonusUpperSection :: Int
                  , finalUpperSection :: Int
@@ -61,23 +59,24 @@ maxRerolls :: Int
 maxRerolls = 2
 
 
-recalculate :: ScoreColumn -> Array Int -> GameState
-recalculate scoreColumn dice = recalculate' score scoreColumn dice
+recalculate :: GameState -> Array Int -> GameState
+recalculate game dice = recalculate' score game dice
 
-recalculate' :: (Category -> Array Int -> Maybe Int) -> ScoreColumn -> Array Int -> GameState
-recalculate' scoreFn scoreColumn dice = { scoreColumn: { scores: newScores, constraints: scoreColumn.constraints }
-                                        , sumUpperSection: sumUpperSection
-                                        , bonusUpperSection: bonusUpperSection
-                                        , finalUpperSection: finalUpperSection
-                                        , sumLowerSection: sumLowerSection
-                                        , finalSum: finalSum
-                                        , gameOver: gameOver
-                                        }
+recalculate' :: (Category -> Array Int -> Maybe Int) -> GameState -> Array Int -> GameState
+recalculate' scoreFn game dice = { scores: newScores
+                                 , constraints: game.constraints
+                                 , sumUpperSection: sumUpperSection
+                                 , bonusUpperSection: bonusUpperSection
+                                 , finalUpperSection: finalUpperSection
+                                 , sumLowerSection: sumLowerSection
+                                 , finalSum: finalSum
+                                 , gameOver: gameOver
+                                 }
   where
-    newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) scoreColumn.scores
+    newScores = map (\sf -> sf { state = newScore sf.category sf.state } ) game.scores
     newScore category (Scored m) = Scored m
     newScore category (Option m) = Option (scoreFn category dice)
-    gameOver = all (\sf -> isScored sf.state) scoreColumn.scores
+    gameOver = all (\sf -> isScored sf.state) game.scores
     sumUpperSection = sumSection upperSectionScores
     bonusUpperSection = if sumUpperSection >= 63 then 35 else 0
     finalUpperSection = sumUpperSection + bonusUpperSection
@@ -86,20 +85,20 @@ recalculate' scoreFn scoreColumn dice = { scoreColumn: { scores: newScores, cons
     sumSection scores = sum $ map (\sf -> summableScore sf.state) scores
     summableScore (Scored (Just s)) = s
     summableScore _ = 0
-    upperSectionScores = filterForCategories upperSectionCategories scoreColumn.scores
-    lowerSectionScores = filterForCategories lowerSectionCategories scoreColumn.scores
+    upperSectionScores = filterForCategories upperSectionCategories game.scores
+    lowerSectionScores = filterForCategories lowerSectionCategories game.scores
     filterForCategories categories = filter (\sf -> any (==sf.category) categories)
 
-recalculateHardcore :: Array ScoreColumn -> Int -> Array Int -> Array GameState
-recalculateHardcore scoreColumns rerolls dice = map f scoreColumns
-  where f scoreColumn = recalculate' (scoreHardcore scoreColumn rerolls) scoreColumn dice
+recalculateHardcore :: Array GameState -> Int -> Array Int -> Array GameState
+recalculateHardcore games rerolls dice = map f games
+  where f game = recalculate' (scoreHardcore game rerolls) game dice
 
-scoreHardcore :: ScoreColumn -> Int -> Category -> Array Int -> Maybe Int
-scoreHardcore scoreColumn rerolls category dice = if scorable then score category dice else Nothing
-  where scorable = all id (map withConstraint scoreColumn.constraints)
+scoreHardcore :: GameState -> Int -> Category -> Array Int -> Maybe Int
+scoreHardcore game rerolls category dice = if scorable then score category dice else Nothing
+  where scorable = all id (map withConstraint game.constraints)
         withConstraint NoRerolls = rerolls == 0
-        withConstraint Descending = isContinuous $ scoreColumn.scores
-        withConstraint Ascending = isContinuous $ reverse scoreColumn.scores
+        withConstraint Descending = isContinuous $ game.scores
+        withConstraint Ascending = isContinuous $ reverse game.scores
         isContinuous scores = all isScored $ map (_.state) $ takeWhile (\sf -> sf.category /= category) scores
 
 score :: Category -> Array Int -> Maybe Int

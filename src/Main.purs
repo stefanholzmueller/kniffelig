@@ -85,7 +85,7 @@ ui = component { render, eval }
                      ]
     constraintsRow = H.tr_ ([
                        H.td_ []
-                     ] ++ map (\game -> renderConstraints game.scoreColumn.constraints) state.games)
+                     ] ++ map (\game -> renderConstraints game.constraints) state.games)
       where renderConstraints constraints = H.td_ [ H.text $ joinWith "" $ map showConstraint constraints ]
     calculatedRow label getter = H.tr_ ([
                                    H.td_ [ H.text label ]
@@ -93,7 +93,7 @@ ui = component { render, eval }
     scoreRow label category = H.tr_ ([
                                 H.td_ [ H.text label ]
                               ] ++ map (\game -> scoreCell game) state.games)
-      where scoreCell game = let maybeFind = find (\sf -> sf.category == category) game.scoreColumn.scores
+      where scoreCell game = let maybeFind = find (\sf -> sf.category == category) game.scores
                                  scoreState = fromMaybe (Y.Option Nothing) $ map (_.state) $ maybeFind
                                  showJust maybe = fromMaybe "-" $ map show maybe
                                  onclick = E.onClick (E.input_ (Score category game))
@@ -113,8 +113,7 @@ ui = component { render, eval }
   eval :: Natural Query (ComponentDSL State Query (Aff (AppEffects eff)))
   eval (Reroll next) = do
     ds <- fromEff randomPips5
-    modify (\state -> let calculation = Y.recalculateHardcore scoreColumns newRerolls newDs
-                          scoreColumns = map (_.scoreColumn) state.games
+    modify (\state -> let calculation = Y.recalculateHardcore state.games newRerolls newDs
                           newRerolls = state.rerolls + 1
                           newDice = map merge (zip state.dice ds)
                           newDs = map (_.value) newDice
@@ -136,13 +135,11 @@ ui = component { render, eval }
                               , rerolls: 0
                               , games: calculation
                               }
-        where calculation = Y.recalculateHardcore newScoreColumns 0 ds
-              newScoreColumns = map (\g -> if g.scoreColumn.constraints == game.scoreColumn.constraints
+        where calculation = Y.recalculateHardcore newGames 0 ds
+              newGames = map (\g -> if g.constraints == game.constraints then newGame else g) state.games
                                            -- assuming constraints are unique for all games
-                                           then newScoreColumn
-                                           else g.scoreColumn) state.games
-              newScoreColumn = game.scoreColumn { scores = newScores }
-              newScores = map setScore game.scoreColumn.scores
+              newGame = game { scores = newScores }
+              newScores = map setScore game.scores
               setScore sf = if sf.category == category
                             then { category: category, state: Y.Scored $ Y.score category (map (_.value) state.dice) }
                             else sf
@@ -171,8 +168,16 @@ makeInitialState ds = let categories = Y.upperSectionCategories ++ Y.lowerSectio
                                         , [ Y.NoRerolls, Y.Ascending ]
                                         ] 
                           initialScores = map (\c -> {category: c, state: Y.Option Nothing}) categories
-                          initialScoreColumns = map (\c -> { constraints: c, scores: initialScores }) constraints
-                          calculation = Y.recalculateHardcore initialScoreColumns 0 ds
+                          initialGameStates = map (\c -> { constraints: c
+                                                         , scores: initialScores
+                                                         , sumUpperSection: 0
+                                                         , bonusUpperSection: 0
+                                                         , finalUpperSection: 0
+                                                         , sumLowerSection: 0
+                                                         , finalSum: 0
+                                                         , gameOver: false
+                                                 }) constraints
+                          calculation = Y.recalculateHardcore initialGameStates 0 ds
                        in { dice: pipsToDice ds
                           , rerolls: 0
                           , games: calculation
