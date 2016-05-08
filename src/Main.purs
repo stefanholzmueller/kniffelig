@@ -41,6 +41,7 @@ ui = component { render, eval }
   render :: State -> ComponentHTML Query
   render state =
     H.div_ [
+      H.p_ [ H.text "Dies ist eine Variante von Kniffel/Yahtzee, bei der man sechs Runden auf einmal spielt. Für jede Spalte gelten allerdings andere Sonderregeln um Punkte zu erzielen. Falls man keine Punkte bekommen kann oder will, darf man weiterhin ein beliebiges Feld streichen (mit null Punkten werten). Ziel ist es natürlich die höchste Gesamtpunktzahl zu erreichen." ],
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
       H.button [ E.onClick (E.input_ Reroll), P.enabled (rerollsAllowed && anyDieMarked && not gameOver) ] [ H.text "Markierte Würfel nochmal werfen" ],
       H.p_ [ H.text if rerollsAllowed
@@ -75,8 +76,8 @@ ui = component { render, eval }
     ]
     where
     showConstraint Y.NoRerolls = "1"
-    showConstraint Y.Ascending = "^"
-    showConstraint Y.Descending = "v"
+    showConstraint Y.Ascending = "↑"
+    showConstraint Y.Descending = "↓"
     legend Y.NoRerolls = H.text $ showConstraint Y.NoRerolls ++ " = keine Wiederholungswürfe erlaubt"
     legend Y.Ascending = H.text $ showConstraint Y.Ascending ++ " = muss von unten nach oben gewertet werden"
     legend Y.Descending = H.text $ showConstraint Y.Descending ++ " = muss von oben nach unten gewertet werden"
