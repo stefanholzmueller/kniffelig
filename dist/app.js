@@ -6659,6 +6659,10 @@ var PS = { };
   var img = function (props) {
       return Halogen_HTML_Core.element(Halogen_HTML_Core.tagName("img"))(props)([  ]);
   };                 
+  var h1 = function (xs) {
+      return Halogen_HTML_Core.element(Halogen_HTML_Core.tagName("h1"))(xs);
+  };
+  var h1_ = h1([  ]);
   var div = function (xs) {
       return Halogen_HTML_Core.element(Halogen_HTML_Core.tagName("div"))(xs);
   };
@@ -6681,6 +6685,8 @@ var PS = { };
   exports["p_"] = p_;
   exports["p"] = p;
   exports["img"] = img;
+  exports["h1_"] = h1_;
+  exports["h1"] = h1;
   exports["div_"] = div_;
   exports["div"] = div;
   exports["button"] = button;
@@ -7441,12 +7447,12 @@ var PS = { };
   var Halogen_HTML_Elements = PS["Halogen.HTML.Elements"];
   var Halogen_HTML_Elements_Indexed = PS["Halogen.HTML.Elements.Indexed"];
   var Halogen_HTML_Events = PS["Halogen.HTML.Events"];
+  var Control_Monad_Aff_Free = PS["Control.Monad.Aff.Free"];
   var Halogen_Query = PS["Halogen.Query"];
   var Halogen_Component = PS["Halogen.Component"];
   var Halogen_Driver = PS["Halogen.Driver"];
   var Prelude = PS["Prelude"];
   var Control_Monad_Aff = PS["Control.Monad.Aff"];
-  var Control_Monad_Aff_Free = PS["Control.Monad.Aff.Free"];
   var Control_Monad_Eff = PS["Control.Monad.Eff"];
   var Control_Monad_Eff_Random = PS["Control.Monad.Eff.Random"];
   var Data_Array = PS["Data.Array"];
@@ -7641,7 +7647,7 @@ var PS = { };
           var anyDieMarked = Data_Foldable.any(Data_Foldable.foldableArray)(Prelude.booleanAlgebraBoolean)(function (d) {
               return d.marked;
           })(state.dice);
-          return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.p_([ Halogen_HTML.text("Dies ist eine Variante von Kniffel/Yahtzee, bei der man sechs Runden auf einmal spielt. F\xfcr jede Spalte gelten allerdings andere Sonderregeln um Punkte zu erzielen. Falls man keine Punkte bekommen kann oder will, darf man weiterhin ein beliebiges Feld streichen (mit null Punkten werten). Ziel ist es nat\xfcrlich die h\xf6chste Gesamtpunktzahl zu erreichen.") ]), Halogen_HTML_Elements.div_(Prelude.map(Prelude.functorArray)(renderDieWithIndex)(zipWithIndex(state.dice))), Halogen_HTML_Elements_Indexed.button([ Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(Reroll.create)), Halogen_HTML_Properties_Indexed.enabled(rerollsAllowed && (anyDieMarked && !gameOver)) ])([ Halogen_HTML.text("Markierte W\xfcrfel nochmal werfen") ]), Halogen_HTML_Elements.p_([ Halogen_HTML.text((function () {
+          return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.h1_([ Halogen_HTML.text("Kniffelig!") ]), Halogen_HTML_Elements.p_([ Halogen_HTML.text("Dies ist eine Variante von Kniffel/Yahtzee, bei der man sechs Runden auf einmal spielt. F\xfcr jede Spalte gelten allerdings andere Sonderregeln um Punkte zu erzielen. Falls man keine Punkte bekommen kann oder will, darf man weiterhin ein beliebiges Feld streichen (mit null Punkten werten). Ziel ist es nat\xfcrlich die h\xf6chste Gesamtpunktzahl zu erreichen.") ]), Halogen_HTML_Elements.div_(Prelude.map(Prelude.functorArray)(renderDieWithIndex)(zipWithIndex(state.dice))), Halogen_HTML_Elements_Indexed.button([ Halogen_HTML_Events_Indexed.onClick(Halogen_HTML_Events.input_(Reroll.create)), Halogen_HTML_Properties_Indexed.enabled(rerollsAllowed && (anyDieMarked && !gameOver)) ])([ Halogen_HTML.text("Markierte W\xfcrfel nochmal werfen") ]), Halogen_HTML_Elements.p_([ Halogen_HTML.text((function () {
               if (rerollsAllowed) {
                   return "Noch " + (Prelude.show(Prelude.showInt)(rerollsPossible) + (" Wiederholungs" + ((function () {
                       var _32 = rerollsPossible === 1;
@@ -7693,7 +7699,7 @@ var PS = { };
                           if (!_19.value0.marked) {
                               return _19.value0;
                           };
-                          throw new Error("Failed pattern match at Main line 38, column 1 - line 39, column 1: " + [ _19.value0.marked.constructor.name ]);
+                          throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _19.value0.marked.constructor.name ]);
                       };
                       var newDice = Prelude.map(Prelude.functorArray)(merge)(Data_Array.zip(state.dice)(_10));
                       var newDs = Prelude.map(Prelude.functorArray)(function (_8) {
@@ -7742,7 +7748,7 @@ var PS = { };
                       if (!_43) {
                           return state.dice;
                       };
-                      throw new Error("Failed pattern match at Main line 38, column 1 - line 39, column 1: " + [ _43.constructor.name ]);
+                      throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _43.constructor.name ]);
                   })();
                   return _44;
               }))(function () {
@@ -7811,7 +7817,7 @@ var PS = { };
                   });
               });
           };
-          throw new Error("Failed pattern match at Main line 38, column 1 - line 39, column 1: " + [ _15.constructor.name ]);
+          throw new Error("Failed pattern match at Main line 37, column 1 - line 38, column 1: " + [ _15.constructor.name ]);
       };
       return Halogen_Component.component({
           render: render, 
