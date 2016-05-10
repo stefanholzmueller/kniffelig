@@ -1,10 +1,10 @@
 module Yahtzee where
 
 import Prelude
-import Data.Array
-import Data.Foldable
-import Data.Generic
-import Data.Maybe
+import Data.Array (group, length, (..), sort, group', filter, takeWhile, reverse)
+import Data.Foldable (all, any, elem, sum)
+import Data.Generic (Generic, gEq, gShow)
+import Data.Maybe (Maybe(Just, Nothing))
 
 
 data Category = Aces

@@ -3,24 +3,23 @@ module Main where
 import Prelude
 
 import Control.Monad.Aff (Aff())
-import Control.Monad.Aff.Free (fromEff)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random
 import Data.Array (alterAt, length, range, replicate, zip)
 import Data.Foldable (all, any, find, sum)
-import Data.Maybe
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
 import Data.String (joinWith)
 import Data.Traversable (sequence)
-import Data.Tuple
+import Data.Tuple (Tuple(Tuple))
 
 import Halogen
 import Halogen.Util (awaitBody, runHalogenAff)
-import qualified Halogen.HTML.Core as C
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
-import qualified Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Core as C
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Properties.Indexed as P
 
-import qualified Yahtzee as Y
+import Yahtzee as Y
 
 
 type AppEffects eff = HalogenEffects (random :: RANDOM | eff)
@@ -41,6 +40,7 @@ ui = component { render, eval }
   render :: State -> ComponentHTML Query
   render state =
     H.div_ [
+      H.h1_ [ H.text "Kniffelig!" ],
       H.p_ [ H.text "Dies ist eine Variante von Kniffel/Yahtzee, bei der man sechs Runden auf einmal spielt. Für jede Spalte gelten allerdings andere Sonderregeln um Punkte zu erzielen. Falls man keine Punkte bekommen kann oder will, darf man weiterhin ein beliebiges Feld streichen (mit null Punkten werten). Ziel ist es natürlich die höchste Gesamtpunktzahl zu erreichen." ],
       H.div_ (map renderDieWithIndex (zipWithIndex state.dice)),
       H.button [ E.onClick (E.input_ Reroll), P.enabled (rerollsAllowed && anyDieMarked && not gameOver) ] [ H.text "Markierte Würfel nochmal werfen" ],
