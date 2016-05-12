@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Monad.Aff (Aff())
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Random
+import Control.Monad.Eff.Random (RANDOM, randomInt)
 import Data.Array (alterAt, length, range, replicate, zip)
 import Data.Foldable (all, any, find, sum)
 import Data.Maybe (Maybe(Just, Nothing), fromMaybe)
@@ -12,7 +12,7 @@ import Data.String (joinWith)
 import Data.Traversable (sequence)
 import Data.Tuple (Tuple(Tuple))
 
-import Halogen
+import Halogen (ComponentDSL, Natural, ComponentHTML, Component, HalogenEffects, runUI, fromEff, component, modify)
 import Halogen.Util (awaitBody, runHalogenAff)
 import Halogen.HTML.Core as C
 import Halogen.HTML.Indexed as H

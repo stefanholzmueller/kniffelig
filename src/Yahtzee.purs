@@ -3,7 +3,7 @@ module Yahtzee where
 import Prelude
 import Data.Array (group, length, (..), sort, group', filter, takeWhile, reverse)
 import Data.Foldable (all, any, elem, sum)
-import Data.Generic (Generic, gEq, gShow)
+import Data.Generic (class Generic, gEq, gShow)
 import Data.Maybe (Maybe(Just, Nothing))
 
 
@@ -87,7 +87,7 @@ recalculate' scoreFn game dice = { scores: newScores
     summableScore _ = 0
     upperSectionScores = filterForCategories upperSectionCategories game.scores
     lowerSectionScores = filterForCategories lowerSectionCategories game.scores
-    filterForCategories categories = filter (\sf -> any (==sf.category) categories)
+    filterForCategories categories = filter (\sf -> any (_ == sf.category) categories)
 
 recalculateHardcore :: Array GameState -> Int -> Array Int -> Array GameState
 recalculateHardcore games rerolls dice = map f games
@@ -118,11 +118,11 @@ score Chance = (Just <<< sum)
 
 
 scorePips :: Int -> Array Int -> Maybe Int
-scorePips n dice = Just (sum (filter (==n) dice))
+scorePips n dice = Just (sum (filter (_ == n) dice))
 
 scoreKinds :: Int -> Array Int -> Maybe Int
 scoreKinds n dice = if (isOfAKind dice) then Just (sum dice) else Nothing
-  where isOfAKind = group' >>> map length >>> any (>=n)
+  where isOfAKind = group' >>> map length >>> any (_ >= n)
 
 scoreFullHouse :: Array Int -> Maybe Int
 scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
@@ -131,7 +131,7 @@ scoreFullHouse dice = if (isFullHouse dice) then Just 25 else Nothing
 
 scoreStraight :: Int -> Array Int -> Maybe Int
 scoreStraight n dice = if isStraight then points n else Nothing
-  where isStraight = any (\die -> all (`elem` dice) (straightStartingFrom die)) dice
+  where isStraight = any (\die -> all (_ `elem` dice) (straightStartingFrom die)) dice
         straightStartingFrom die = (die..(die+n-1))
         points 4 = Just 30
         points 5 = Just 40

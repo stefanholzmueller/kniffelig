@@ -14,12 +14,15 @@
     "purescript-lists": "~0.7.7",
     "purescript-arrays": "~0.4.4",
     "purescript-strings": "~0.7.1",
-    "purescript-halogen": "^0.6.1",
+    "purescript-halogen": "^0.7.1",
     "purescript-random": "~0.2.3",
     "purescript-strongcheck": "~0.14.7",
     "purescript-generics": "^0.7.2"
   },
   "resolutions": {
-    "purescript-strings": "^0.7.0"
+    "purescript-strings": "~0.7.1"
+  },
+  "devDependencies": {
+    "purescript-simple-assert": "https://github.com/philopon/purescript-simple-assert.git#^0.3.0"
   }
 }

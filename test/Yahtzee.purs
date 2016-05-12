@@ -78,7 +78,7 @@ propLargeStraight (RandomDice dice) = actual == expected <?> show dice
 propYahtzee :: RandomDice -> Result
 propYahtzee (RandomDice dice) = actual == expected <?> show dice
   where actual = score Yahtzee dice
-	expected = if any (==dice) [[1,1,1,1,1], [2,2,2,2,2], [3,3,3,3,3], [4,4,4,4,4], [5,5,5,5,5], [6,6,6,6,6]] then Just 50 else Nothing
+	expected = if any (_ == dice) [[1,1,1,1,1], [2,2,2,2,2], [3,3,3,3,3], [4,4,4,4,4], [5,5,5,5,5], [6,6,6,6,6]] then Just 50 else Nothing
 
 dbg :: forall a. (Show a) => a -> a
 dbg = unsafePerformEff <<< printAndReturn
